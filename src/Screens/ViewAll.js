@@ -122,7 +122,7 @@
 //       formData.append('pet_id', selectedPetId);
 
 //       const response = await axios.post(
-//         'https://argosmob.uk/being-petz/public/api/v1/pet/detail',
+//         'https://argosmob.com/being-petz/public/api/v1/pet/detail',
 //         formData,
 //         {
 //           headers: {
@@ -151,7 +151,7 @@
 //       formData.append('pet_id', selectedPetId);
 
 //       const response = await axios.post(
-//         `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+//         `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
 //         formData,
 //         {
 //           headers: {
@@ -1207,7 +1207,7 @@ const ViewAll = () => {
   //             formData.append('id', id);
 
   //             const response = await axios.post(
-  //               `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+  //               `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
   //               formData,
   //               {
   //                 headers: {
@@ -1289,7 +1289,7 @@ const ViewAll = () => {
               formData.append('id', id);
 
               const response = await axios.post(
-                `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+                `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
                 formData,
                 {
                   headers: {
@@ -1366,7 +1366,7 @@ const ViewAll = () => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/detail',
+        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -1394,7 +1394,7 @@ const ViewAll = () => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+        `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
         formData,
         {
           headers: {

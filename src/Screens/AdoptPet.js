@@ -26,7 +26,7 @@ const AdoptPet = () => {
     const fetchPets = async () => {
       try {
         const response = await fetch(
-          'https://argosmob.uk/being-petz/public/api/v1/pet/all-adoptions',
+          'https://argosmob.com/being-petz/public/api/v1/pet/all-adoptions',
           {
             method: 'POST',
           },
@@ -125,7 +125,7 @@ const AdoptPet = () => {
                 <Image
                   source={{
                     uri: item.featured_image
-                      ? `https://argosmob.uk/being-petz/public/${item.featured_image}`
+                      ? `https://argosmob.com/being-petz/public/${item.featured_image}`
                       : 'https://demofree.sirv.com/nope-not-here.jpg',
                   }}
                   style={styles.petImage}

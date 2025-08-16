@@ -18,6 +18,7 @@ import {
   Modal,
   SafeAreaView,
   TextInput,
+  StatusBar,
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -68,6 +69,7 @@ const Home = () => {
   const [reportMessage, setReportMessage] = useState('');
   const [reporting, setReporting] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [parentComment, setParentComment] = useState({});
 
   const characterLimit = 150;
 
@@ -98,6 +100,84 @@ const Home = () => {
 
   const isFocused = useIsFocused();
 
+  const renderComment = ({item}) => {
+    const [parentComment, setParentComment] = useState(null);
+    const [loadingParent, setLoadingParent] = useState(false);
+
+    // Fetch parent comment if this is a reply
+    useEffect(() => {
+      if (item?.parent_id) {
+        const fetchParentComment = async () => {
+          try {
+            setLoadingParent(true);
+            const formData = new FormData();
+            formData.append('user_id', item.parent_id);
+
+            const response = await axios.post(
+              'https://argosmob.uk/being-petz/public/api/v1/auth/my-detail',
+              formData,
+              {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              },
+            );
+
+            if (response.data?.status && response.data?.user) {
+              setParentComment(response.data.user);
+            }
+          } catch (error) {
+            console.error('Error fetching parent comment:', error);
+          } finally {
+            setLoadingParent(false);
+          }
+        };
+
+        fetchParentComment();
+      }
+    }, [item?.parent_id]);
+
+    return (
+      <View style={styles.commentItem}>
+        {/* Main comment */}
+        <Text
+          style={styles.commentUser}
+          accessible={true}
+          accessibilityRole="text">
+          {item?.user?.name || 'User'}
+        </Text>
+
+        {/* Show parent comment if this is a reply */}
+        {item?.parent_id && (
+          <View style={styles.parentCommentContainer}>
+            {loadingParent ? (
+              <ActivityIndicator size="small" color="#8337B2" />
+            ) : (
+              <>
+                <Text style={styles.parentCommentLabel}>
+                  Replying to {parentComment?.name || 'user'}:
+                </Text>
+                {parentComment?.comment && (
+                  <Text style={styles.parentCommentText}>
+                    {parentComment.comment}
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Current comment text */}
+        <Text
+          style={styles.commentText}
+          accessible={true}
+          accessibilityRole="text">
+          {item.comment}
+        </Text>
+      </View>
+    );
+  };
+
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -106,7 +186,7 @@ const Home = () => {
       if (isFocused && isMounted) {
         try {
           const response = await axios.get(
-            'https://argosmob.uk/being-petz/public/api/v1/post/all',
+            'https://argosmob.com/being-petz/public/api/v1/post/all',
             {signal: controller.signal},
           );
           if (isMounted) {
@@ -155,7 +235,7 @@ const Home = () => {
     try {
       setRefreshing(true);
       const response = await axios.get(
-        'https://argosmob.uk/being-petz/public/api/v1/post/all',
+        'https://argosmob.com/being-petz/public/api/v1/post/all',
       );
       setAllPosts(response?.data?.data?.data);
     } catch (err) {
@@ -189,7 +269,7 @@ const Home = () => {
       formData.append('parent_id', userData.id.toString()); // Ensure it's a string
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/like',
+        'https://argosmob.com/being-petz/public/api/v1/post/like',
         formData,
         {
           headers: {
@@ -246,7 +326,7 @@ const Home = () => {
       formData.append('is_public', '1');
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/re-post',
+        'https://argosmob.com/being-petz/public/api/v1/post/re-post',
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -373,7 +453,7 @@ const Home = () => {
         <View style={birthdayStyles.header}>
           <Image
             source={{
-              uri: `https://argosmob.uk/being-petz/public/${item?.parent?.profile}`,
+              uri: `https://argosmob.com/being-petz/public/${item?.parent?.profile}`,
             }}
             style={birthdayStyles.profileImage}
           />
@@ -398,7 +478,7 @@ const Home = () => {
           <View style={birthdayStyles.petInfo}>
             <Image
               source={{
-                uri: `https://argosmob.uk/being-petz/public/${item?.pet?.avatar}`,
+                uri: `https://argosmob.com/being-petz/public/${item?.pet?.avatar}`,
               }}
               style={birthdayStyles.petAvatar}
             />
@@ -424,17 +504,18 @@ const Home = () => {
     const [mediaModalVisible, setMediaModalVisible] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const [paused, setPaused] = useState(true);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const scrollRef = useRef(null);
     const characterLimit = 150;
-    const [imageHeight, setImageHeight] = useState(480); // Default height
+    const [imageHeight, setImageHeight] = useState(480);
 
-    // Function to calculate height based on image aspect ratio
     const calculateImageHeight = imageUri => {
       Image.getSize(
         imageUri,
-        (width, height) => {
-          const ratio = height / width;
-          const calculatedHeight = Dimensions.get('window').width * ratio;
+        (widthImg, heightImg) => {
+          const ratio = heightImg / widthImg;
+          const calculatedHeight =
+            (Dimensions.get('window').width - 32) * ratio;
           setImageHeight(calculatedHeight);
         },
         error => {
@@ -443,22 +524,19 @@ const Home = () => {
       );
     };
 
-    // Use it in your component
     useEffect(() => {
       if (item?.featured_image) {
-        const uri = `https://argosmob.uk/being-petz/public/${item.featured_image}`;
+        const uri = `https://argosmob.com/being-petz/public/${item.featured_image}`;
         calculateImageHeight(uri);
       }
     }, [item?.featured_image]);
 
-    const videoHeight = (Dimensions.get('window').width - 16) * (9 / 16);
+    const videoHeight = Dimensions.get('window').width - 32;
 
     const isLongText = item?.content?.length > characterLimit;
     const displayText = expanded
       ? item?.content
       : item?.content?.slice(0, characterLimit);
-
-    // Combine all media items (featured, images, videos)
     const allMedia = [
       ...(item?.featured_image
         ? [{uri: item.featured_image, isVideo: false}]
@@ -481,36 +559,80 @@ const Home = () => {
       setPaused(false);
     };
 
+    const onScrollEnd = event => {
+      const contentOffset = event.nativeEvent.contentOffset.x;
+      const viewSize = event.nativeEvent.layoutMeasurement.width;
+      const pageNum = Math.round(contentOffset / viewSize);
+      setCurrentIndex(pageNum);
+    };
+
     const renderMediaItem = (media, index) => {
-      const uri = `https://argosmob.uk/being-petz/public/${media.uri}`;
+      const uri = `https://argosmob.com/being-petz/public/${media.uri}`;
 
       return (
         <TouchableOpacity
           key={index}
           onPress={() => handleMediaPress(uri, media.isVideo)}
           activeOpacity={0.8}
-          style={styles.mediaContainer}>
+          style={{
+            width: width - 32,
+            marginRight: multipleMedia ? 8 : 0,
+            position: 'relative',
+            backgroundColor: '#fff',
+          }}>
           {media.isVideo ? (
-            <>
+            <View
+              style={{
+                overflow: 'hidden',
+                borderRadius: 8,
+                backgroundColor: '#fff',
+                width: '93%',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <Video
                 source={{uri}}
-                style={[styles.postVideo, {height: videoHeight}]}
+                style={{
+                  width: width - 32,
+                  height: '100%',
+                  borderRadius: 8,
+                }}
                 resizeMode="cover"
                 paused={true}
+                repeat={true}
+                posterResizeMode="cover"
+                // muted={true}
+                playInBackground={false}
+                playWhenInactive={false}
+                ignoreSilentSwitch="obey"
               />
-              <View style={styles.videoPlayButton}>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.15)',
+                }}>
                 <Icon
                   name="play-circle"
-                  size={50}
-                  color="rgba(255,255,255,0.8)"
+                  size={70}
+                  color="rgba(255,255,255,0.85)"
                 />
               </View>
-            </>
+            </View>
           ) : (
             <Image
               source={{uri}}
-              style={[styles.postImage, {height: imageHeight}]}
-              // resizeMode="cover"
+              style={{
+                width: '95.5%',
+                height: 400,
+                borderRadius: 8,
+              }}
+              resizeMode="cover"
             />
           )}
         </TouchableOpacity>
@@ -518,19 +640,45 @@ const Home = () => {
     };
 
     return (
-      <View style={styles.postCard}>
-        <View style={styles.postHeader}>
+      <View
+        style={{
+          marginTop: 10,
+          marginHorizontal: 8,
+          backgroundColor: '#fff',
+          borderRadius: 12,
+          shadowColor: '#000',
+          shadowOpacity: 0.07,
+          shadowRadius: 8,
+          shadowOffset: {width: 0, height: 2},
+          elevation: 2,
+          paddingBottom: 10,
+        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 12,
+            paddingBottom: 8,
+          }}>
           <Image
             source={{
-              uri: `https://argosmob.uk/being-petz/public/${item?.parent?.profile}`,
+              uri: `https://argosmob.com/being-petz/public/${item?.parent?.profile}`,
             }}
-            style={styles.profileImage}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              marginRight: 12,
+              backgroundColor: '#eee',
+            }}
           />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>
+          <View style={{flex: 1}}>
+            <Text style={{fontWeight: '600', fontSize: 15, color: '#252525'}}>
               {item?.parent?.first_name} {item?.parent?.last_name}
             </Text>
-            {/* <Text style={styles.postTime}>{item?.created_at_human}</Text> */}
+            <Text style={{color: '#8583A8', fontSize: 13, marginTop: 2}}>
+              {item?.created_at_human}
+            </Text>
           </View>
           <TouchableOpacity
             onPress={() => {
@@ -543,7 +691,12 @@ const Home = () => {
 
         {item?.content && (
           <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-            <Text style={styles.caption}>
+            <Text
+              style={{
+                color: '#333',
+                fontSize: 14,
+                paddingLeft: 10,
+              }}>
               {displayText}
               {isLongText && !expanded ? '...' : ''}
               {isLongText && (
@@ -556,12 +709,24 @@ const Home = () => {
         )}
 
         {item?.tagged_users?.length > 0 && (
-          <View style={styles.taggedUsersContainer}>
-            <Icon name="tag" size={16} color="#8337B2" style={styles.tagIcon} />
-            <View style={styles.taggedUsersList}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginVertical: 2,
+              marginLeft: 10,
+            }}>
+            <Icon
+              name="tag"
+              size={16}
+              color="#8337B2"
+              style={{marginRight: 4}}
+            />
+            <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
               {item.tagged_users.map((user, index) => (
-                <View key={user.id} style={styles.taggedUser}>
-                  <Text style={styles.taggedUserName}>
+                <View key={user.id}>
+                  <Text
+                    style={{color: '#8337B2', fontSize: 13, marginRight: 4}}>
                     {user.first_name} {user.last_name}
                     {index < item.tagged_users.length - 1 ? ',' : ''}
                   </Text>
@@ -571,62 +736,175 @@ const Home = () => {
           </View>
         )}
 
+        {/* Media Carousel With Dots & Counter */}
         {hasMedia && (
-          <ScrollView
-            contentContainerStyle={{alignItems: 'center'}}
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            snapToAlignment="center"
-            showsHorizontalScrollIndicator={false}
-            style={styles.mediaScrollView}>
-            {allMedia.map((media, index) => renderMediaItem(media, index))}
-          </ScrollView>
+          <View
+            style={{
+              width: width,
+              alignItems: 'center',
+              position: 'relative',
+            }}>
+            {multipleMedia && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 48,
+                  backgroundColor: 'rgba(36,36,36,0.55)',
+                  borderRadius: 14,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                  zIndex: 1,
+                }}>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontWeight: '600',
+                    fontSize: 13,
+                    letterSpacing: 0.2,
+                  }}>
+                  {currentIndex + 1}/{allMedia.length}
+                </Text>
+              </View>
+            )}
+
+            <ScrollView
+              contentContainerStyle={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              ref={scrollRef}
+              horizontal
+              pagingEnabled
+              snapToAlignment="center"
+              showsHorizontalScrollIndicator={false}
+              style={{
+                width: width - 16,
+                height: 400,
+              }}
+              onMomentumScrollEnd={onScrollEnd}>
+              {allMedia.map((media, index) => renderMediaItem(media, index))}
+            </ScrollView>
+            {multipleMedia && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  marginTop: 8,
+                  marginBottom: 2,
+                  width: '100%',
+                }}>
+                {allMedia.map((_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: currentIndex === i ? 8 : 8,
+                      height: currentIndex === i ? 8 : 8,
+                      borderRadius: currentIndex === i ? 7 : 4,
+                      margin: 3,
+                      backgroundColor:
+                        currentIndex === i ? '#8337B2' : '#D3CCE3',
+                    }}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
         )}
 
-        <View style={{marginVertical: 10}}>
+        <View style={{marginTop: 10}}>
           <PostActions item={item} />
         </View>
-
         <Modal
           visible={mediaModalVisible}
           transparent={true}
+          statusBarTranslucent={true}
           onRequestClose={() => {
             setPaused(true);
             setMediaModalVisible(false);
           }}>
-          <View style={styles.fullscreenModalContainer}>
-            <TouchableOpacity
-              style={styles.fullscreenModalBackground}
-              activeOpacity={1}
-              onPress={() => {
-                setPaused(true);
-                setMediaModalVisible(false);
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              marginTop: -StatusBar.currentHeight,
+              paddingTop: StatusBar.currentHeight,
+            }}>
+            <View
+              style={{
+                width: '100%',
+                height: '100%',
+                justifyContent: 'center',
               }}>
               {selectedMedia?.isVideo ? (
-                <Video
-                  source={{uri: selectedMedia.uri}}
-                  style={styles.fullscreenVideo}
-                  resizeMode="contain"
-                  paused={paused}
-                  controls={true}
-                />
+                <>
+                  <Video
+                    source={{uri: selectedMedia.uri}}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    resizeMode="contain"
+                    paused={paused}
+                    controls={false}
+                    repeat={true}
+                    // muted={true}
+                  />
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setPaused(!paused)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: paused
+                        ? 'rgba(0,0,0,0.4)'
+                        : 'transparent',
+                    }}>
+                    {paused && (
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(0,0,0,0.7)',
+                          width: 70,
+                          height: 70,
+                          borderRadius: 35,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                        <Icon name="play" size={40} color="white" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </>
               ) : (
                 <Image
                   source={{uri: selectedMedia?.uri}}
-                  style={styles.fullscreenImage}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
                   resizeMode="contain"
                 />
               )}
-            </TouchableOpacity>
-
+            </View>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={{
+                position: 'absolute',
+                top: StatusBar.currentHeight + 20,
+                right: 20,
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                borderRadius: 20,
+                padding: 10,
+              }}
               onPress={() => {
                 setPaused(true);
                 setMediaModalVisible(false);
               }}>
-              <Icon name="close" size={30} color="white" />
+              <Icon name="close" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </Modal>
@@ -639,61 +917,35 @@ const Home = () => {
     const [selectedMedia, setSelectedMedia] = useState(null);
     const [mediaModalVisible, setMediaModalVisible] = useState(false);
     const [paused, setPaused] = useState(true);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const scrollRef = useRef(null);
     const characterLimit = 150;
-    const [imageHeight, setImageHeight] = useState(480); // Default height
-    const videoHeight = (Dimensions.get('window').width - 16) * (9 / 16);
-    console.log('lllll', item);
 
-    // Function to calculate height based on image aspect ratio
-    const calculateImageHeight = imageUri => {
-      Image.getSize(
-        imageUri,
-        (width, height) => {
-          const ratio = height / width;
-          const calculatedHeight = Dimensions.get('window').width * ratio;
-          setImageHeight(calculatedHeight);
-        },
-        error => {
-          console.error("Couldn't get image size:", error);
-        },
-      );
-    };
+    // Media aggregator
+    const getMediaItems = post => [
+      ...(post?.featured_image
+        ? [{uri: post.featured_image, isVideo: false}]
+        : []),
+      ...(post?.featured_video
+        ? [{uri: post.featured_video, isVideo: true}]
+        : []),
+      ...(post?.images?.map(img => ({uri: img.image_path, isVideo: false})) ||
+        []),
+      ...(post?.videos?.map(vid => ({uri: vid.video_path, isVideo: true})) ||
+        []),
+    ];
+    const originalMedia = getMediaItems(item);
+    const repostMedia = item?.repost ? getMediaItems(item.repost) : [];
+    const allMedia = [...originalMedia, ...repostMedia];
 
-    // Calculate image height when featured image changes
-    useEffect(() => {
-      if (item?.repost?.featured_image) {
-        const uri = `https://argosmob.uk/being-petz/public/${item.repost?.featured_image}`;
-        calculateImageHeight(uri);
-      }
-    }, [item?.repost?.featured_image]);
+    const hasMedia = allMedia.length > 0;
+    const multipleMedia = allMedia.length > 1;
+    const videoHeight = Dimensions.get('window').width - 16;
 
     const isLongText = item?.content?.length > characterLimit;
     const displayText = expanded
       ? item?.content
       : item?.content?.slice(0, characterLimit);
-
-    // Combine all media items from original post and repost
-    const getMediaItems = post => {
-      return [
-        ...(post?.featured_image
-          ? [{uri: post.featured_image, isVideo: false}]
-          : []),
-        ...(post?.featured_video
-          ? [{uri: post.featured_video, isVideo: true}]
-          : []),
-        ...(post?.images?.map(img => ({uri: img.image_path, isVideo: false})) ||
-          []),
-        ...(post?.videos?.map(vid => ({uri: vid.video_path, isVideo: true})) ||
-          []),
-      ];
-    };
-
-    const originalMedia = getMediaItems(item);
-    const repostMedia = item?.repost ? getMediaItems(item.repost) : [];
-
-    const hasMedia = originalMedia.length > 0 || repostMedia.length > 0;
-    const multipleMedia = originalMedia.length + repostMedia.length > 1;
 
     const handleMediaPress = (mediaUri, isVideo = false) => {
       setSelectedMedia({uri: mediaUri, isVideo});
@@ -701,36 +953,76 @@ const Home = () => {
       setPaused(false);
     };
 
-    const renderMediaItem = (media, index) => {
-      const uri = `https://argosmob.uk/being-petz/public/${media.uri}`;
+    // For carousel scrolling
+    const onScrollEnd = event => {
+      const contentOffset = event.nativeEvent.contentOffset.x;
+      const viewSize = event.nativeEvent.layoutMeasurement.width;
+      const pageNum = Math.round(contentOffset / viewSize);
+      setCurrentIndex(pageNum);
+    };
 
+    // Carousel media render (matches PostCardOriginal)
+    const renderMediaItem = (media, index) => {
+      const uri = `https://argosmob.com/being-petz/public/${media.uri}`;
       return (
         <TouchableOpacity
           key={index}
           onPress={() => handleMediaPress(uri, media.isVideo)}
           activeOpacity={0.8}
-          style={styles.mediaContainer}>
+          style={{
+            width: width - 32,
+            marginRight: multipleMedia ? 8 : 0,
+            position: 'relative',
+          }}>
           {media.isVideo ? (
-            <>
+            <View
+              style={{
+                overflow: 'hidden',
+                borderRadius: 8,
+                backgroundColor: '#fff',
+                width: '95%',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <Video
                 source={{uri}}
-                style={[styles.postVideo, {height: videoHeight}]}
+                style={{
+                  width: '100%',
+                  height: 400,
+                  // borderRadius: 24,
+                }}
                 resizeMode="cover"
                 paused={true}
+                repeat={true}
+                posterResizeMode="cover"
+                // muted={true}
+                playInBackground={false}
+                playWhenInactive={false}
+                ignoreSilentSwitch="obey"
               />
-              <View style={styles.videoPlayButton}>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.15)',
+                }}>
                 <Icon
                   name="play-circle"
-                  size={50}
-                  color="rgba(255,255,255,0.8)"
+                  size={70}
+                  color="rgba(255,255,255,0.85)"
                 />
               </View>
-            </>
+            </View>
           ) : (
             <Image
               source={{uri}}
-              style={[styles.postImage, {height: imageHeight}]}
-              // resizeMode="cover"
+              style={{width: '95.5%', height: 400, borderRadius: 8}}
+              resizeMode="cover"
             />
           )}
         </TouchableOpacity>
@@ -738,23 +1030,56 @@ const Home = () => {
     };
 
     return (
-      <View style={[styles.postCard, styles.repostCard]}>
-        {/* Original post header */}
-        <View style={styles.postHeader}>
+      <View
+        style={{
+          marginTop: 10,
+          marginHorizontal: 8,
+          backgroundColor: '#fff',
+          borderRadius: 12,
+          shadowColor: '#000',
+          shadowOpacity: 0.07,
+          shadowRadius: 8,
+          shadowOffset: {width: 0, height: 2},
+          elevation: 2,
+          paddingBottom: 10,
+        }}>
+        {/* Repost banner */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 12,
+            paddingBottom: 8,
+          }}>
           <Image
             source={{
-              uri: `https://argosmob.uk/being-petz/public/${item?.parent?.profile}`,
+              uri: `https://argosmob.com/being-petz/public/${item?.parent?.profile}`,
             }}
-            style={styles.profileImage}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              marginRight: 12,
+              backgroundColor: '#eee',
+            }}
           />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>
+          <View style={{flex: 1}}>
+            <Text style={{fontWeight: '600', fontSize: 15, color: '#252525'}}>
               {item?.parent?.first_name} {item?.parent?.last_name}
             </Text>
-            {/* <Text style={styles.postTime}>{item?.created_at_human}</Text> */}
-            <View style={styles.repostHeader}>
-              <Icon name="repeat" size={14} color="#888" />
-              <Text style={styles.repostText}>Reposted</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 1,
+              }}>
+              <Icon
+                name="repeat"
+                size={14}
+                color="#888"
+                style={{marginRight: 4}}
+              />
+              <Text style={{color: '#888', fontSize: 13}}>Reposted</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -766,10 +1091,15 @@ const Home = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Original post content */}
-        {item?.content && (
+        {/* Caption */}
+        {item?.content != null && (
           <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-            <Text style={styles.caption}>
+            <Text
+              style={{
+                color: '#333',
+                fontSize: 14,
+                paddingLeft: 10,
+              }}>
               {displayText}
               {isLongText && !expanded ? '...' : ''}
               {isLongText && (
@@ -781,155 +1111,250 @@ const Home = () => {
           </TouchableOpacity>
         )}
 
-        {/* Original post media */}
-        {originalMedia.length > 0 && (
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            snapToAlignment="center"
-            showsHorizontalScrollIndicator={false}
-            style={styles.mediaScrollView}>
-            {allMedia.map((media, index) => renderMediaItem(media, index))}
-          </ScrollView>
-        )}
-
-        {/* Reposted content container */}
-        {item?.repost && (
-          <View style={styles.repostContainer}>
-            {/* Repost header */}
-            <View style={styles.repostPostHeader}>
-              <Image
-                source={{
-                  uri: `https://argosmob.uk/being-petz/public/${item.repost.parent?.profile}`,
-                }}
-                style={styles.repostProfileImage}
-              />
-              <View style={styles.repostUserInfo}>
-                <Text style={styles.repostUserName}>
-                  {item.repost.parent?.first_name}{' '}
-                  {item.repost.parent?.last_name}
-                </Text>
-                <Text style={styles.repostTime}>
-                  {item.repost.created_at_human}
+        {/* Carousel (all original + reposted media) */}
+        {hasMedia && (
+          <View
+            style={{
+              width: width,
+              alignItems: 'center',
+              position: 'relative',
+            }}>
+            {multipleMedia && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 48,
+                  backgroundColor: 'rgba(36,36,36,0.55)',
+                  borderRadius: 14,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                  zIndex: 1,
+                }}>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontWeight: '600',
+                    fontSize: 13,
+                    letterSpacing: 0.2,
+                  }}>
+                  {currentIndex + 1}/{allMedia.length}
                 </Text>
               </View>
-            </View>
+            )}
 
-            {/* Repost content */}
-            {/* {item.repost.content && (
-              <Text style={styles.repostCaption}>{item.repost.content}</Text>
-            )} */}
-
-            {/* Repost media */}
-            {repostMedia.length > 0 && (
-              <ScrollView
-                horizontal
-                pagingEnabled
-                snapToAlignment="center"
-                showsHorizontalScrollIndicator={false}
-                style={{}}>
-                {repostMedia.map((media, index) =>
-                  renderMediaItem(media, index),
-                )}
-              </ScrollView>
+            <ScrollView
+              contentContainerStyle={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              ref={scrollRef}
+              horizontal
+              pagingEnabled
+              snapToAlignment="center"
+              showsHorizontalScrollIndicator={false}
+              style={{
+                width: width,
+                height: 400,
+              }}
+              onMomentumScrollEnd={onScrollEnd}>
+              {allMedia.map((media, index) => renderMediaItem(media, index))}
+            </ScrollView>
+            {multipleMedia && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  marginTop: 8,
+                  // marginBottom: 2,
+                  width: '100%',
+                }}>
+                {allMedia.map((_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: currentIndex === i ? 8 : 8,
+                      height: currentIndex === i ? 8 : 8,
+                      borderRadius: currentIndex === i ? 7 : 4,
+                      margin: 3,
+                      backgroundColor:
+                        currentIndex === i ? '#8337B2' : '#D3CCE3',
+                    }}
+                  />
+                ))}
+              </View>
             )}
           </View>
         )}
+        {/* Actions */}
+        <View style={{marginTop: 10}}>
+          <PostActions item={item} />
+        </View>
 
-        <PostActions item={item} />
-
-        {/* Fullscreen media modal */}
         <Modal
           visible={mediaModalVisible}
           transparent={true}
+          statusBarTranslucent={true}
           onRequestClose={() => {
             setPaused(true);
             setMediaModalVisible(false);
           }}>
-          <View style={styles.fullscreenModalContainer}>
-            <TouchableOpacity
-              style={styles.fullscreenModalBackground}
-              activeOpacity={1}
-              onPress={() => {
-                setPaused(true);
-                setMediaModalVisible(false);
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              marginTop: -StatusBar.currentHeight,
+              paddingTop: StatusBar.currentHeight,
+            }}>
+            <View
+              style={{
+                width: '100%',
+                height: '100%',
+                justifyContent: 'center',
               }}>
               {selectedMedia?.isVideo ? (
-                <Video
-                  source={{uri: selectedMedia.uri}}
-                  style={styles.fullscreenVideo}
-                  resizeMode="contain"
-                  paused={paused}
-                  controls={true}
-                />
+                <>
+                  <Video
+                    source={{uri: selectedMedia.uri}}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    resizeMode="contain"
+                    paused={paused}
+                    controls={false}
+                    repeat={true}
+                    // muted={true}
+                  />
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setPaused(!paused)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: paused
+                        ? 'rgba(0,0,0,0.4)'
+                        : 'transparent',
+                    }}>
+                    {paused && (
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(0,0,0,0.7)',
+                          width: 70,
+                          height: 70,
+                          borderRadius: 35,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                        <Icon name="play" size={40} color="white" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </>
               ) : (
                 <Image
                   source={{uri: selectedMedia?.uri}}
-                  style={styles.fullscreenImage}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
                   resizeMode="contain"
                 />
               )}
-            </TouchableOpacity>
-
+            </View>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={{
+                position: 'absolute',
+                top: StatusBar.currentHeight + 20,
+                right: 20,
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                borderRadius: 20,
+                padding: 10,
+              }}
               onPress={() => {
                 setPaused(true);
                 setMediaModalVisible(false);
               }}>
-              <Icon name="close" size={30} color="white" />
+              <Icon name="close" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </Modal>
       </View>
     );
   };
+
   const PostActions = ({item}) => {
-    // console.log('Postaction', item);
+    console.log('item', item);
     return (
-      <View style={styles.postFooter}>
-        <View style={styles.postActions}>
-          {/* Like Button */}
-          <View style={{flexDirection: 'row'}}>
-            <TouchableOpacity onPress={() => handleLikePost(item?.id)}>
-              <Icon
-                name={item.is_liked ? 'heart' : 'heart-outline'}
-                size={22}
-                color={item.is_liked ? '#FF0000' : '#000'}
-              />
-            </TouchableOpacity>
-            <Text style={styles.actionText}>{item?.likes_count || 0}</Text>
-          </View>
-          <View style={{flexDirection: 'row'}}>
-            {/* Comment Button */}
-            <TouchableOpacity onPress={() => openCommentModal(item)}>
-              <Icon name="comment-outline" size={22} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.actionText}>{item?.comments_count || 0}</Text>
-          </View>
-          <View style={{flexDirection: 'row'}}>
-            {/* Repost Button */}
-            <TouchableOpacity
-              onPress={() => handleRepost(item)}
-              // disabled={item.is_repost}
-            >
-              <Icon
-                name="repeat"
-                size={22}
-                color={item.is_repost ? '#8337B2' : '#000'}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <Text style={styles.timeAgo}>{item?.created_at_human}</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderTopWidth: 1,
+          borderTopColor: '#eee',
+          paddingTop: 8,
+          marginTop: 8,
+        }}>
+        {/* Like Button */}
+        <TouchableOpacity
+          onPress={() => handleLikePost(item?.id)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 4,
+            paddingHorizontal: 12,
+          }}>
+          <Icon
+            name={item.is_liked ? 'heart' : 'heart-outline'}
+            size={22}
+            color={item.is_liked ? '#FF0000' : '#5A5A5A'}
+          />
+          <Text style={styles.actionText}>{item?.likes_count || 0}</Text>
+
+          <Text style={{fontSize: 14, color: '#5A5A5A'}}>Like</Text>
+        </TouchableOpacity>
+
+        {/* Comment Button */}
+        <TouchableOpacity
+          onPress={() => openCommentModal(item)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 4,
+            paddingHorizontal: 12,
+          }}>
+          <Text style={{marginRight: 6, fontSize: 18}}>💬</Text>
+
+          <Text style={styles.actionText}>{item?.comments_count || 0}</Text>
+
+          <Text style={{fontSize: 14, color: '#5A5A5A'}}>Comment</Text>
+        </TouchableOpacity>
+
+        {/* Repost Button */}
+        <TouchableOpacity
+          onPress={() => handleRepost(item)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 4,
+            paddingHorizontal: 12,
+          }}>
+          <Text style={{marginRight: 6, fontSize: 18}}>🔄</Text>
+          <Text style={{fontSize: 14, color: '#5A5A5A'}}>Repost</Text>
+        </TouchableOpacity>
       </View>
     );
   };
 
   const openCommentModal = post => {
-    setSelectedPostForComment(post);
     setModalCommentVisible(true);
+    setSelectedPostForComment(post);
     fetchComments(post?.id);
   };
 
@@ -940,7 +1365,7 @@ const Home = () => {
       formData.append('post_id', postId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/get-comment',
+        'https://argosmob.com/being-petz/public/api/v1/post/get-comment',
         formData,
         {
           headers: {
@@ -981,7 +1406,7 @@ const Home = () => {
       formData.append('comment', newComment);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/comment',
+        'https://argosmob.com/being-petz/public/api/v1/post/comment',
         formData,
         {
           headers: {
@@ -1014,7 +1439,7 @@ const Home = () => {
       formData.append('parent_id', userData?.id);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/friends/suggestions',
+        'https://argosmob.com/being-petz/public/api/v1/pet/friends/suggestions',
         formData,
         {
           headers: {
@@ -1040,7 +1465,7 @@ const Home = () => {
       formData.append('parent_id', userData?.id);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/get/my',
+        'https://argosmob.com/being-petz/public/api/v1/post/get/my',
         formData,
         {
           headers: {
@@ -1087,7 +1512,7 @@ const Home = () => {
       formData.append('to_parent_id', to_parent_id.toString()); // Ensure it's a string
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/friends/send-request',
+        'https://argosmob.com/being-petz/public/api/v1/pet/friends/send-request',
         formData,
         {
           headers: {
@@ -1157,7 +1582,7 @@ const Home = () => {
                 formData.append('post_id', post.id);
 
                 const response = await axios.post(
-                  'https://argosmob.uk/being-petz/public/api/v1/post/delete',
+                  'https://argosmob.com/being-petz/public/api/v1/post/delete',
                   formData,
                   {
                     headers: {
@@ -1236,7 +1661,7 @@ const Home = () => {
                 formData.append('post_id', post.id);
 
                 const response = await axios.post(
-                  'https://argosmob.uk/being-petz/public/api/v1/hide-post',
+                  'https://argosmob.com/being-petz/public/api/v1/hide-post',
                   formData,
                   {
                     headers: {
@@ -1317,7 +1742,7 @@ const Home = () => {
       };
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/report/add',
+        'https://argosmob.com/being-petz/public/api/v1/report/add',
         JSON.stringify(reportPayload),
         {
           headers: {
@@ -1354,8 +1779,8 @@ const Home = () => {
   if (loading && allPosts?.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        {/* <ActivityIndicator size="large" color="#0000ff" /> */}
-        <LottieLoader visible={loading} />
+        <ActivityIndicator size="large" color="#8337B2" />
+        {/* <LottieLoader visible={loading} /> */}
       </View>
     );
   }
@@ -1422,7 +1847,7 @@ const Home = () => {
               <View style={styles.suggestFriendcard}>
                 <Image
                   source={{
-                    uri: `https://argosmob.uk/being-petz/public/${item?.profile}`,
+                    uri: `https://argosmob.com/being-petz/public/${item?.profile}`,
                   }}
                   style={styles.suggestFriendprofileImage}
                   onError={() => console.log('Failed to load profile image')}
@@ -1499,8 +1924,296 @@ const Home = () => {
           }}
         />
 
+        {/* 
         <Modal
-          animationType="slide"
+          transparent
+          animationType="fade"
+          visible={modalVisible2}
+          onRequestClose={() => setModalVisible2(false)}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+            }}>
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 20,
+                padding: 20,
+                width: '80%',
+                maxWidth: 400,
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+                elevation: 5,
+              }}>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  alignItems: 'center',
+                  borderRadius: 16,
+                  marginVertical: 8,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                  handleEditPost(selectedPost);
+                }}
+                accessible={true}
+                accessibilityLabel="Edit post"
+                accessibilityRole="button">
+                <Text style={{color: '#8337B2', fontSize: 16}}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  alignItems: 'center',
+                  borderRadius: 16,
+                  marginVertical: 8,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                  handleDelete(selectedPost);
+                }}
+                accessible={true}
+                accessibilityLabel="Delete post"
+                accessibilityRole="button">
+                <Text style={{color: '#8337B2', fontSize: 16}}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  alignItems: 'center',
+                  borderRadius: 16,
+                  marginVertical: 8,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                  handleHide(selectedPost);
+                }}
+                accessible={true}
+                accessibilityLabel="Hide post"
+                accessibilityRole="button">
+                <Text style={{color: '#8337B2', fontSize: 16}}>Hide</Text>
+              </TouchableOpacity>
+
+              <TextInput
+                placeholder="Why are you reporting this post?"
+                placeholderTextColor="#fff"
+                value={reportMessage}
+                onChangeText={setReportMessage}
+                maxLength={100}
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  borderRadius: 24,
+                  paddingHorizontal: 12,
+                  paddingLeft: 20,
+                  paddingVertical: 8,
+                  marginVertical: 12,
+                  color: '#fff',
+                  maxHeight: 200,
+                  backgroundColor: '#8337B2',
+                }}
+                multiline
+                accessible={true}
+                accessibilityLabel="Report reason input"
+                accessibilityRole="text"
+              />
+
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  alignItems: 'center',
+                  borderRadius: 16,
+                  marginVertical: 8,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                  handleReport(selectedPost, reportMessage);
+                }}
+                accessible={true}
+                accessibilityLabel="Report post"
+                accessibilityRole="button">
+                <Text style={{color: '#8337B2', fontSize: 16}}>Report</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: '#8337B2',
+                  alignItems: 'center',
+                  borderRadius: 16,
+                  marginVertical: 8,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                }}
+                accessible={true}
+                accessibilityLabel="Close"
+                accessibilityRole="button">
+                <Text style={{color: '#8337B2', fontSize: 16}}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal> */}
+
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalVisible2}
+          onRequestClose={() => setModalVisible2(false)}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(8,8,24,0.15)',
+            }}>
+            <View
+              style={{
+                width: '84%',
+                maxWidth: 420,
+                backgroundColor: '#fff',
+                borderRadius: 18,
+                paddingHorizontal: 20,
+                paddingTop: 14,
+                paddingBottom: 18,
+                shadowColor: '#222',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.17,
+                shadowRadius: 14,
+                elevation: 8,
+              }}>
+              {/* Header row */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 8,
+                }}>
+                {/* <View style={{flexDirection: 'row'}}> */}
+                  <TouchableOpacity
+                    style={{
+                      marginRight: 22,
+                      paddingVertical: 4,
+                    }}
+                    onPress={() => {
+                      setModalVisible2(false);
+                      handleEditPost(selectedPost);
+                    }}>
+                    <Text
+                      style={{
+                        color: '#8337B2',
+                        fontSize: 16,
+                        fontWeight: '600',
+                      }}>
+                      Edit
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{paddingVertical: 4}}
+                    onPress={() => {
+                      setModalVisible2(false);
+                      handleDelete(selectedPost);
+                    }}>
+                    <Text
+                      style={{
+                        color: '#8337B2',
+                        fontSize: 16,
+                        fontWeight: '600',
+                      }}>
+                      Delete
+                    </Text>
+                  </TouchableOpacity>
+                {/* </View> */}
+                <TouchableOpacity
+                  style={{
+                    // position: 'absolute',
+                    // right: 0,
+                    // top: -5,
+                    // padding: 8,
+                    // zIndex: 3,
+                  }}
+                  onPress={() => setModalVisible2(false)}>
+                  <Text
+                    style={{fontSize: 24, color: '#8337B2', fontWeight: '700'}}>
+                    ×
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Input for Report Reason */}
+              <TextInput
+                placeholder="Why are you reporting this post?"
+                placeholderTextColor="#A569C2"
+                value={reportMessage}
+                onChangeText={setReportMessage}
+                maxLength={100}
+                style={{
+                  backgroundColor: '#fff',
+                  borderWidth: 1.5,
+                  borderColor: '#8337B2',
+                  borderRadius: 14,
+                  paddingHorizontal: 14,
+                  paddingVertical: 13,
+                  marginTop: 10,
+                  marginBottom: 24,
+                  fontSize: 15,
+                  color: '#8337B2',
+                  minHeight: 56,
+                  textAlignVertical: 'top',
+                }}
+                multiline
+                accessible={true}
+                accessibilityLabel="Report reason input"
+                accessibilityRole="text"
+              />
+
+              {/* Report Button */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#8337B2',
+                  paddingVertical: 13,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  marginBottom: 0,
+                }}
+                onPress={() => {
+                  setModalVisible2(false);
+                  handleReport(selectedPost, reportMessage);
+                }}
+                accessible={true}
+                accessibilityLabel="Report post"
+                accessibilityRole="button">
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    letterSpacing: 0.4,
+                  }}>
+                  Report
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          animationType="fade"
           transparent={true}
           visible={modalCommentVisible}
           onRequestClose={() => setModalCommentVisible(false)}>
@@ -1510,7 +2223,7 @@ const Home = () => {
                 <View style={styles.postInfo}>
                   <Image
                     source={{
-                      uri: `https://argosmob.uk/being-petz/public/${selectedPostForComment?.parent?.profile}`,
+                      uri: `https://argosmob.com/being-petz/public/${selectedPostForComment?.parent?.profile}`,
                     }}
                     style={styles.smallProfileImage}
                     onError={() => console.log('Failed to load profile image')}
@@ -1535,19 +2248,47 @@ const Home = () => {
               </View>
 
               <SafeAreaView style={styles.commentsContainer}>
-                {loading ? (
-                  <ActivityIndicator size="large" color="#8337B2" />
-                ) : (
-                  <FlatList
-                    data={comments}
-                    keyExtractor={item => item.id.toString()}
-                    renderItem={({item}) => (
+                <FlatList
+                  data={loading ? [] : comments}
+                  keyExtractor={item =>
+                    item.id?.toString?.() ?? Math.random().toString()
+                  }
+                  renderItem={({item}) => {
+                    if (item?.parent_id) {
+                      const fetchParentComment = async () => {
+                        try {
+                          const formData = new FormData();
+                          formData.append('user_id', item.parent_id);
+                          const response = await axios.post(
+                            'https://argosmob.com/being-petz/public/api/v1/auth/my-detail',
+                            formData,
+                            {
+                              headers: {
+                                'Content-Type': 'multipart/form-data',
+                              },
+                            },
+                          );
+                          if (response.data?.status && response.data?.user) {
+                            setParentComment(response.data.user);
+                          }
+                        } catch (error) {
+                          console.error(
+                            'Error fetching parent comment:',
+                            error,
+                          );
+                        }
+                      };
+                      fetchParentComment();
+                    }
+                    return (
                       <View style={styles.commentItem}>
                         <Text
                           style={styles.commentUser}
                           accessible={true}
                           accessibilityRole="text">
-                          {item?.user?.name || 'User'}
+                          {parentComment?.first_name ||
+                            item?.user?.name ||
+                            'User'}
                         </Text>
                         <Text
                           style={styles.commentText}
@@ -1556,16 +2297,28 @@ const Home = () => {
                           {item.comment}
                         </Text>
                       </View>
-                    )}
-                    ListEmptyComponent={
+                    );
+                  }}
+                  ListEmptyComponent={
+                    loading ? null : (
                       <Text
                         style={styles.noComments}
                         accessible={true}
                         accessibilityRole="text">
                         No comments yet
                       </Text>
-                    }
-                  />
+                    )
+                  }
+                />
+                {loading && (
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingVertical: 16,
+                    }}>
+                    <ActivityIndicator size="large" color="#8337B2" />
+                  </View>
                 )}
               </SafeAreaView>
 
@@ -1599,167 +2352,6 @@ const Home = () => {
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* <Modal
-          transparent
-          animationType="fade"
-          visible={modalVisible2}
-          onRequestClose={() => setModalVisible2(false)}>
-          <View style={styles.modalOverlay2}>
-            <View style={styles.modalContent2}>
-              <TouchableOpacity
-                style={styles.modalOption2}
-                onPress={() => {
-                  setModalVisible2(false);
-                  handleEditPost(selectedPost);
-                }}
-                accessible={true}
-                accessibilityLabel="Edit post"
-                accessibilityRole="button">
-                <Text style={styles.modalText2}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalOption2}
-                onPress={() => {
-                  setModalVisible2(false);
-                  handleDelete(selectedPost);
-                }}
-                accessible={true}
-                accessibilityLabel="Delete post"
-                accessibilityRole="button">
-                <Text style={styles.modalText2}>Delete</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalOption2}
-                onPress={() => {
-                  setModalVisible2(false);
-                  handleHide(selectedPost);
-                }}
-                accessible={true}
-                accessibilityLabel="Hide post"
-                accessibilityRole="button">
-                <Text style={styles.modalText2}>Hide</Text>
-              </TouchableOpacity>
-              <TextInput
-                placeholder="Why are you reporting this post?"
-                placeholderTextColor="#fff"
-                value={reportMessage}
-                onChangeText={setReportMessage}
-                maxLength={100}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#8337B2',
-                  borderRadius: 24,
-                  paddingHorizontal: 12,
-                  paddingLeft: 20,
-                  paddingVertical: 8,
-                  marginVertical: 12,
-                  color: '#fff',
-                  maxHeight: 200,
-                  backgroundColor: '#8337B2',
-                }}
-                multiline
-                accessible={true}
-                accessibilityLabel="Report reason input"
-                accessibilityRole="text"
-              />
-
-              <TouchableOpacity
-                style={styles.modalOption2}
-                onPress={() => {
-                  setModalVisible2(false);
-                  handleReport(selectedPost, reportMessage);
-                }}
-                accessible={true}
-                accessibilityLabel="Report post"
-                accessibilityRole="button">
-                <Text style={styles.modalText2}>Report</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalOption2}
-                onPress={() => {
-                  setModalVisible2(false);
-                }}
-                accessible={true}
-                accessibilityLabel="Close"
-                accessibilityRole="button">
-                <Text style={styles.modalText2}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal> */}
-        <Modal
-          transparent
-          animationType="fade"
-          visible={modalVisible2}
-          onRequestClose={() => setModalVisible2(false)}>
-          <View style={styles.modalOverlay2}>
-            <View style={styles.modalContent2}>
-              {/* Top Row: Edit | Delete | Close (X) */}
-              <View style={styles.topRow}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setModalVisible2(false);
-                    handleEditPost(selectedPost);
-                  }}
-                  accessible={true}
-                  accessibilityLabel="Edit post"
-                  accessibilityRole="button">
-                  <Text style={styles.topRowText}>Edit</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setModalVisible2(false);
-                    handleDelete(selectedPost);
-                  }}
-                  accessible={true}
-                  accessibilityLabel="Delete post"
-                  accessibilityRole="button">
-                  <Text style={styles.topRowText}>Delete</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setModalVisible2(false);
-                  }}
-                  accessible={true}
-                  accessibilityLabel="Close"
-                  accessibilityRole="button">
-                  <Icon name="close" size={20} color="#8337B2" />
-                </TouchableOpacity>
-              </View>
-
-              {/* TextInput */}
-              <TextInput
-                placeholder="Why are you reporting this post?"
-                placeholderTextColor="#8337B2"
-                value={reportMessage}
-                onChangeText={setReportMessage}
-                maxLength={100}
-                style={styles.reportInput}
-                multiline
-                accessible={true}
-                accessibilityLabel="Report reason input"
-                accessibilityRole="text"
-              />
-
-              {/* Submit button */}
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  setModalVisible2(false);
-                  handleReport(selectedPost, reportMessage);
-                }}
-                accessible={true}
-                accessibilityLabel="Submit report"
-                accessibilityRole="button">
-                <Text style={styles.submitButtonText}>Report</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -1878,13 +2470,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   mediaScrollView: {
-    // marginTop: 10,
+    marginTop: 10,
     // height: 300,
   },
   mediaContainer: {
-    width: Dimensions.get('window').width-32, // Account for padding
-    // height: 300,
-    marginRight: 0,
+    // width: Dimensions.get('window').width, // Account for padding
+    // maxHeight: 400,
+    // marginRight: 10,
+    // backgroundColor: 'red',
   },
   videoPlayButton: {
     position: 'absolute',
@@ -1960,11 +2553,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginHorizontal: 10,
   },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // marginBottom: 10,
-  },
   profileImage: {
     width: 40,
     height: 40,
@@ -1986,10 +2574,10 @@ const styles = StyleSheet.create({
   postImage: {
     width: '100%',
     height: 480,
-    // borderRadius: 15,
+    borderRadius: 15,
     // marginBottom: 10,
     // marginVertical: 10,
-    // resizeMode: 'stretch',
+    // resizeMode: 'cover',
   },
   postFooter: {
     flexDirection: 'row',
@@ -2002,7 +2590,9 @@ const styles = StyleSheet.create({
     gap: 25,
   },
   actionText: {
-    marginLeft: 5,
+    marginHorizontal: 5,
+    color: '#5A5A5A',
+    fontSize: 16,
   },
   commentIcon: {
     marginLeft: 15,

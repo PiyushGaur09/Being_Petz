@@ -16,7 +16,7 @@
 // import FriendRequestsModal from './Components/FriendRequestsModal';
 // import BannerCarousel from './Components/BannerCarousel';
 
-// const BASE_URL = 'https://argosmob.uk/being-petz/public';
+// const BASE_URL = 'https://argosmob.com/being-petz/public';
 // const API_URL = `${BASE_URL}/api/v1/pet/lost-found/all`;
 
 // const AdoptPet = () => {
@@ -301,7 +301,7 @@ import CommonHeader from './Components/CommonHeader';
 import FriendRequestsModal from './Components/FriendRequestsModal';
 import BannerCarousel from './Components/BannerCarousel';
 
-const BASE_URL = 'https://argosmob.uk/being-petz/public';
+const BASE_URL = 'https://argosmob.com/being-petz/public';
 const API_URL = `${BASE_URL}/api/v1/pet/lost-found/all`;
 
 const AdoptPet = () => {

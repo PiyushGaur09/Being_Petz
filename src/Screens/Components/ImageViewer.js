@@ -73,7 +73,7 @@ const ImageViewer = ({route, navigation}) => {
           <Animated.View style={{flex: 1}}>
             <Animated.Image
               source={{
-                uri: `https://argosmob.uk/being-petz/public/${imageUrl}`,
+                uri: `https://argosmob.com/being-petz/public/${imageUrl}`,
               }}
               style={[styles.image, animatedStyle]}
               resizeMode="contain"

@@ -20,7 +20,7 @@ import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
 import petIdEmitter from './PetIdEmitter';
 import HeaderLoader from './HeaderLoader';
 
-const API_URL = 'https://argosmob.uk/being-petz/public/api/v1';
+const API_URL = 'https://argosmob.com/being-petz/public/api/v1';
 const API_ENDPOINTS = {
   USER_DETAIL: `${API_URL}/auth/my-detail`,
 };
@@ -87,8 +87,8 @@ const CommonHeader = ({onChatPress, onPeoplePress}) => {
   if (loading) {
     return (
       <LinearGradient colors={['#8337B2', '#3B0060']} style={styles.container}>
-        {/* <ActivityIndicator size="large" color="#fff" /> */}
-        <HeaderLoader visible={loading}/>
+        <ActivityIndicator size="large" color="#fff" />
+        {/* <HeaderLoader visible={loading}/> */}
       </LinearGradient>
     );
   }
@@ -150,7 +150,7 @@ const CommonHeader = ({onChatPress, onPeoplePress}) => {
 
       <ImageZoomModal
         visible={isImageZoomed}
-        imageUri={`https://argosmob.uk/being-petz/public/${userData?.profile}`}
+        imageUri={`https://argosmob.com/being-petz/public/${userData?.profile}`}
         onClose={() => setImageZoomed(false)}
       /> */}
     </LinearGradient>
@@ -176,7 +176,7 @@ const ProfileSection = ({userData, onImagePress, onNamePress}) => (
     <TouchableOpacity onPress={onImagePress} activeOpacity={0.8}>
       <Image
         source={{
-          uri: `https://argosmob.uk/being-petz/public/${userData.profile}`,
+          uri: `https://argosmob.com/being-petz/public/${userData.profile}`,
         }}
         style={styles.profileImage}
       />

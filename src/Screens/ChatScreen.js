@@ -121,7 +121,6 @@ const ChatScreen = () => {
           </View>
         )}
       />
-
     </View>
   );
 };
@@ -152,7 +151,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   searchInput: {fontSize: 16},
- 
+
   communityContainer: {
     paddingVertical: 10,
   },

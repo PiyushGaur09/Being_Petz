@@ -50,7 +50,7 @@
 //       formData.append('email_phone', emailPhone);
 
 //       const response = await axios.post(
-//         'https://argosmob.uk/being-petz/public/api/v1/auth/forget-password',
+//         'https://argosmob.com/being-petz/public/api/v1/auth/forget-password',
 //         formData,
 //         {
 //           headers: {
@@ -271,7 +271,7 @@ const RecoverPassword = ({navigation}) => {
       formData.append('email_phone', emailPhone);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/auth/forget-password',
+        'https://argosmob.com/being-petz/public/api/v1/auth/forget-password',
         formData,
         {
           headers: {

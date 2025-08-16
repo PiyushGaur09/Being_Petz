@@ -55,7 +55,7 @@ const Pets = () => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/detail',
+        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -95,8 +95,8 @@ const Pets = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        {/* <ActivityIndicator size="large" color="#8337B2" /> */}
-        <LottieLoader visible={loading} />
+        <ActivityIndicator size="large" color="#8337B2" />
+        {/* <LottieLoader visible={loading} /> */}
       </View>
     );
   }
@@ -123,8 +123,8 @@ const Pets = () => {
         <Image
           source={{
             uri: petData?.avatar
-              ? `https://argosmob.uk/being-petz/public/${petData.avatar}`
-              : 'https://argosmob.uk/being-petz/public/default-avatar.jpg',
+              ? `https://argosmob.com/being-petz/public/${petData.avatar}`
+              : 'https://argosmob.com/being-petz/public/default-avatar.jpg',
           }}
           style={styles.avatar}
           onError={e => console.log('Image load error:', e.nativeEvent.error)}

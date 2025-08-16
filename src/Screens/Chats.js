@@ -17,12 +17,13 @@ import axios from 'axios';
 import FriendRequestsModal from './Components/FriendRequestsModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CommonHeader from './Components/CommonHeader';
+import LottieLoader from './Components/LottieLoader';
 
 const ALL_COMMUNITIES_API =
-  'https://argosmob.uk/being-petz/public/api/v1/pet/community/get';
+  'https://argosmob.com/being-petz/public/api/v1/pet/community/get';
 const MY_COMMUNITIES_API =
-  'https://argosmob.uk/being-petz/public/api/v1/pet/community/my';
-const BASE_URL = 'https://argosmob.uk/being-petz/public/';
+  'https://argosmob.com/being-petz/public/api/v1/pet/community/my';
+const BASE_URL = 'https://argosmob.com/being-petz/public/';
 
 const Chats = () => {
   const navigation = useNavigation();
@@ -116,7 +117,7 @@ const Chats = () => {
       formData.append('search', query);
 
       const res = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/community/search',
+        'https://argosmob.com/being-petz/public/api/v1/pet/community/search',
         formData,
         {
           headers: {
@@ -169,7 +170,7 @@ const Chats = () => {
 
     try {
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/community/join',
+        'https://argosmob.com/being-petz/public/api/v1/pet/community/join',
         formData,
         {
           headers: {
@@ -331,6 +332,7 @@ const Chats = () => {
     return (
       <View style={[styles.container, {justifyContent: 'center'}]}>
         <ActivityIndicator size="large" color="#8337B2" />
+        {/* <LottieLoader visible={loading} /> */}
       </View>
     );
   }

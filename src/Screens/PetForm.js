@@ -131,7 +131,7 @@ const PetForm = () => {
       });
 
       const response = await fetch(
-        'https://argosmob.uk/being-petz/public/api/v1/auth/update-profile-picture', // <- adjust URL if needed
+        'https://argosmob.com/being-petz/public/api/v1/auth/update-profile-picture', // <- adjust URL if needed
         {
           method: 'POST',
           body: formData,
@@ -178,7 +178,7 @@ const PetForm = () => {
 
     try {
       const response = await fetch(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/update',
+        'https://argosmob.com/being-petz/public/api/v1/pet/update',
         {
           method: 'POST',
           body: formData,

@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {Checkbox} from 'react-native-paper';
@@ -19,42 +18,44 @@ import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import TermsModal from './Components/TermModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Signup = () => {
   const navigation = useNavigation();
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [checked, setChecked] = useState(false);
-  const [email_phone, setEmail_phone] = useState('');
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
 
   const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = phone => /^[0-9]{10,13}$/.test(phone);
   const validatePassword = pass => pass.length >= 8;
 
   const handleSignup = async () => {
-    if (!email_phone || !password || !confirmPassword) {
+    if (!email || !firstName) {
       Alert.alert('Error', 'Please fill all fields.');
       return;
     }
 
-    if (!validateEmail(email_phone) && !validatePhone(email_phone)) {
-      Alert.alert('Error', 'Please enter a valid email or phone number.');
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
       return;
     }
 
-    if (!validatePassword(password)) {
-      Alert.alert('Error', 'Password must be at least 8 characters long.');
-      return;
-    }
+    // if (!validatePassword(password)) {
+    //   Alert.alert('Error', 'Password must be at least 8 characters long.');
+    //   return;
+    // }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
+    // if (password !== confirmPassword) {
+    //   Alert.alert('Error', 'Passwords do not match.');
+    //   return;
+    // }
 
     if (!checked) {
       Alert.alert('Error', 'Please accept Terms and Conditions.');
@@ -64,12 +65,14 @@ const Signup = () => {
     setIsLoading(true);
 
     const formData = new FormData();
-    formData.append('email_phone', email_phone);
-    formData.append('password', password);
+    formData.append('email', email);
+    formData.append('first_name', firstName);
+    formData.append('last_name', lastName);
+    // formData.append('password', password);
 
     try {
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/auth/register',
+        'https://argosmob.com/being-petz/public/api/v1/auth/register',
         formData,
         {
           headers: {
@@ -79,6 +82,11 @@ const Signup = () => {
           timeout: 10000,
         },
       );
+
+      await AsyncStorage.setItem(
+          'user_data',
+          JSON.stringify(response?.data?.data),
+        );
 
       console.log('Registration Success', response.data);
       navigation.navigate('OTP', {userData: response.data.data});
@@ -120,19 +128,35 @@ const Signup = () => {
               Welcome! Please enter your information below and get started.
             </Text>
 
-
+            <TextInput
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="First Name"
+              placeholderTextColor="#808B9A"
+              autoCapitalize="words"
+            />
 
             <TextInput
               style={styles.input}
-              value={email_phone}
-              onChangeText={setEmail_phone}
-              placeholder="Your email / Phone Number"
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="Last Name"
+              placeholderTextColor="#808B9A"
+              autoCapitalize="words"
+            />
+
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
               placeholderTextColor="#808B9A"
               keyboardType="email-address"
               autoCapitalize="none"
             />
 
-            <View style={styles.passwordContainer}>
+            {/* <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
                 value={password}
@@ -149,9 +173,9 @@ const Signup = () => {
                   color="#aaa"
                 />
               </TouchableOpacity>
-            </View>
+            </View> */}
 
-            <View style={styles.passwordContainer}>
+            {/* <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
                 value={confirmPassword}
@@ -170,7 +194,7 @@ const Signup = () => {
                   color="#aaa"
                 />
               </TouchableOpacity>
-            </View>
+            </View> */}
 
             <View style={styles.checkboxContainer}>
               <Checkbox
@@ -210,16 +234,14 @@ const Signup = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.orText}>or</Text>
+            {/* <Text style={styles.orText}>or</Text>
 
             <View style={styles.socialIcons}>
               <Image source={require('../Assests/Images/googleLogo.png')} />
               <Image source={require('../Assests/Images/facebookLogo.png')} />
               <Image source={require('../Assests/Images/appleLogo.png')} />
-            </View>
+            </View> */}
           </View>
-
-          {/* Terms and Conditions Modal */}
         </View>
       </ScrollView>
       <TermsModal
@@ -363,10 +385,6 @@ const styles = StyleSheet.create({
     width: '50%',
     justifyContent: 'space-between',
     marginBottom: 20,
-  },
-  linkText: {
-    color: '#8337B2',
-    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,

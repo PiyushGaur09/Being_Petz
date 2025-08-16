@@ -52,7 +52,7 @@ const ResetPassword = ({route}) => {
       formData.append('password', newPassword);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/auth/change-password',
+        'https://argosmob.com/being-petz/public/api/v1/auth/change-password',
         formData,
         {
           headers: {

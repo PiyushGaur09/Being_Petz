@@ -36,7 +36,7 @@ const VaccinationModal = ({visible, onClose, petType = 'dog'}) => {
 
       // Make the POST request with Axios
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/vaccine/get',
+        'https://argosmob.com/being-petz/public/api/v1/vaccine/get',
         formData,
         {
           headers: {

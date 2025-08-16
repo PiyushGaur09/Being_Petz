@@ -58,7 +58,7 @@
 //       formData.append('pet_id', petId);
 
 //       const response = await axios.post(
-//         `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+//         `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
 //         formData,
 //         {
 //           headers: {
@@ -407,7 +407,7 @@ const DailyReminders = ({petId}) => {
       formData.append('pet_id', petId);
 
       const response = await axios.post(
-        `https://argosmob.uk/being-petz/public/api/v1/${endpoint}`,
+        `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
         formData,
         {
           headers: {
@@ -521,8 +521,8 @@ const DailyReminders = ({petId}) => {
   if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        {/* <ActivityIndicator size="large" color="#8337B2" /> */}
-        <LottieLoader visible={isLoading} />
+        <ActivityIndicator size="large" color="#8337B2" />
+        {/* <LottieLoader visible={isLoading} /> */}
       </View>
     );
   }

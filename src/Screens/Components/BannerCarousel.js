@@ -45,7 +45,7 @@ const BannerCarousel = ({
   const fetchBanners = async () => {
     try {
       const response = await axios.get(
-        'https://argosmob.uk/being-petz/public/api/v1/banner/all',
+        'https://argosmob.com/being-petz/public/api/v1/banner/all',
       );
       if (response.data.status && response.data.banners) {
         setBanners(response.data.banners);
@@ -100,7 +100,7 @@ const BannerCarousel = ({
   );
 
   const renderItem = ({item}) => {
-    const imageUrl = `https://argosmob.uk/being-petz/public/${item.mobile_image}`;
+    const imageUrl = `https://argosmob.com/being-petz/public/${item.mobile_image}`;
 
     return (
       <TouchableOpacity
@@ -114,8 +114,8 @@ const BannerCarousel = ({
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        {/* <ActivityIndicator size="large" color="#8337B2" /> */}
-        <HeaderLoader visible={loading}/>
+        <ActivityIndicator size="large" color="#8337B2" />
+        {/* <HeaderLoader visible={loading}/> */}
       </View>
     );
   }

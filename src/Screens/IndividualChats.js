@@ -143,7 +143,7 @@ const IndividualChatScreen = () => {
       });
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/community/send-message',
+        'https://argosmob.com/being-petz/public/api/v1/community/send-message',
         formData,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
@@ -168,7 +168,7 @@ const IndividualChatScreen = () => {
       formData.append('parent_id', currentUserId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/community/vote-poll',
+        'https://argosmob.com/being-petz/public/api/v1/community/vote-poll',
         formData,
         {
           headers: {

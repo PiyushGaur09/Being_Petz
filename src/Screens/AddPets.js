@@ -127,7 +127,7 @@
 //       }
 
 //       const response = await axios.post(
-//         'https://argosmob.uk/being-petz/public/api/v1/pet/add',
+//         'https://argosmob.com/being-petz/public/api/v1/pet/add',
 //         formData,
 //         {
 //           headers: {
@@ -1069,7 +1069,7 @@ const AddPets = ({route}) => {
       }
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/add',
+        'https://argosmob.com/being-petz/public/api/v1/pet/add',
         formData,
         {
           headers: {

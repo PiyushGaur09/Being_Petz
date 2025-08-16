@@ -53,7 +53,7 @@ const Services = () => {
       formData.append('user_id', userId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/favorite/services/get',
+        'https://argosmob.com/being-petz/public/api/v1/favorite/services/get',
         formData,
         {
           headers: {

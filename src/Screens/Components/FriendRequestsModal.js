@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'https://argosmob.uk/being-petz/public/api/v1';
+const API_URL = 'https://argosmob.com/being-petz/public/api/v1';
 const DEFAULT_AVATAR = require('../../Assests/Images/dog.png');
 
 const FriendRequestsModal = ({visible, onClose}) => {
@@ -153,7 +153,7 @@ const FriendRequestsModal = ({visible, onClose}) => {
       const user =
         state.activeTab === 'received' ? item.from_parent : item.to_parent;
       const avatarSource = user?.profile
-        ? {uri: `https://argosmob.uk/being-petz/public/${user.profile}`}
+        ? {uri: `https://argosmob.com/being-petz/public/${user.profile}`}
         : DEFAULT_AVATAR;
 
       const isProcessing = state.processingRequest === item.id;

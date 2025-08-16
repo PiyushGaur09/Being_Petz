@@ -19,7 +19,7 @@
 //   console.log('pet', route.params?.pet);
 //   const pet = route?.params?.pet || {};
 //   const user = pet?.user || {};
-//   const BASE_URL = 'https://argosmob.uk/being-petz/public';
+//   const BASE_URL = 'https://argosmob.com/being-petz/public';
 
 //   const petImage = pet?.images?.[0]
 //     ? {
@@ -234,7 +234,7 @@
 // const PetsDetail = ({route}) => {
 //   const pet = route?.params?.pet || {};
 //   const user = pet?.user || {};
-//   const BASE_URL = 'https://argosmob.uk/being-petz/public';
+//   const BASE_URL = 'https://argosmob.com/being-petz/public';
 //   const [modalVisible, setModalVisible] = useState(false);
 //   const navigation = useNavigation();
 
@@ -509,7 +509,7 @@ const {width} = Dimensions.get('window');
 const PetDetails = ({route}) => {
   const pet = route?.params?.pet || {};
   const user = pet?.user || {};
-  const BASE_URL = 'https://argosmob.uk/being-petz/public';
+  const BASE_URL = 'https://argosmob.com/being-petz/public';
   const [modalVisible, setModalVisible] = useState(false);
   const [favorite, setFavorite] = useState(false);
   const navigation = useNavigation();
@@ -651,7 +651,7 @@ const PetDetails = ({route}) => {
         scrollEventThrottle={16}>
         {/* Pet Image */}
         <View style={styles.imageContainer}>
-          <Image source={petImage} style={styles.petImage} resizeMode="cover" />
+          <Image source={petImage} style={styles.petImage} resizeMode='stretch' />
 
           {/* Share Button */}
           <TouchableOpacity

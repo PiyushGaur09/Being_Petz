@@ -64,7 +64,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/detail',
+        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -88,7 +88,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
     try {
       setLoadingVaccines(true);
       const response = await axios.get(
-        'https://argosmob.uk/being-petz/public/api/v1/vaccine/get-all',
+        'https://argosmob.com/being-petz/public/api/v1/vaccine/get-all',
       );
 
       if (response.data && response.data.data) {
@@ -410,7 +410,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
       });
 
       const response = await axios.post(
-        `https://argosmob.uk/being-petz/public/api/v1${config.endpoint}`,
+        `https://argosmob.com/being-petz/public/api/v1${config.endpoint}`,
         data,
         {
           headers: {

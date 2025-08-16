@@ -40,7 +40,7 @@ const SearchScreen = () => {
 
     try {
       const response = await fetch(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/friends/search-user',
+        'https://argosmob.com/being-petz/public/api/v1/pet/friends/search-user',
         {
           method: 'POST',
           body: formData,
@@ -58,7 +58,7 @@ const SearchScreen = () => {
     }
   };
 
-  const baseUrl = 'https://argosmob.uk/being-petz/public/';
+  const baseUrl = 'https://argosmob.com/being-petz/public/';
 
   const renderUserItem = ({item}) => (
     <TouchableOpacity

@@ -40,13 +40,13 @@ const UpdatePostModal = ({visible, onClose, postData, onUpdateSuccess}) => {
         is_public: postData?.is_public?.toString() || postData?.repost?.is_public?.toString() || '1',
         featured_image: postData.featured_image
           ? {
-              uri: `https://argosmob.uk/being-petz/public/${postData.featured_image}`,
+              uri: `https://argosmob.com/being-petz/public/${postData.featured_image}`,
               name: 'featured.jpg',
               type: 'image/jpeg',
             }
           : postData?.repost?.featured_image
           ? {
-              uri: `https://argosmob.uk/being-petz/public/${postData?.repost?.featured_image}`,
+              uri: `https://argosmob.com/being-petz/public/${postData?.repost?.featured_image}`,
               name: 'featured.jpg',
               type: 'image/jpeg',
             }
@@ -108,7 +108,7 @@ const UpdatePostModal = ({visible, onClose, postData, onUpdateSuccess}) => {
       };
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/post/update',
+        'https://argosmob.com/being-petz/public/api/v1/post/update',
         data,
         config,
       );

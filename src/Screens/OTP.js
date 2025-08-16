@@ -9,72 +9,242 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import AlertNotification, {
-  Dialog,
-  ALERT_TYPE,
-} from 'react-native-alert-notification';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OTP = ({route}) => {
   const navigation = useNavigation();
-  const {emailPhone, user_id} = route.params;
-  console.log('kkkkkk', user_id);
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  const {email, userData, data, otpGenerated} = route.params;
+  console.log('route', route);
+  console.log('email', email);
+  console.log('userData', userData);
+  console.log('data', data);
+  console.log('otpGenerated', otpGenerated);
+
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
-  const DEFAULT_OTP = '12345';
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
 
+  // Timer
   useEffect(() => {
+    if (timer === 0) return;
     const interval = setInterval(() => {
-      if (timer > 0) {
-        setTimer(timer - 1);
-      }
+      setTimer(prev => {
+        if (prev === 0) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [timer]);
 
-  const handleResendOTP = () => {
-    setTimer(30);
-    setOtp(['', '', '', '', '']);
-    AlertNotification.show({
-      title: 'OTP Resent',
-      message: 'New OTP has been sent to your mobile number',
-      autoClose: 3000,
-    });
+  const handleResendOTP = async () => {
+    try {
+      setIsLoading(true);
+      setTimer(30);
+      setOtp(['', '', '', '', '', '']);
+      const formData = new FormData();
+      formData.append('user_id', userData?.id || data?.id);
+      const response = await axios.post(
+        'https://argosmob.com/being-petz/public/api/v1/auth/register-verify',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      if (response.data?.status) {
+        Alert.alert('OTP Resent', 'New OTP has been sent to your email');
+      } else {
+        Alert.alert('Error', response.data?.message || 'Failed to resend OTP');
+      }
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message ||
+          'Failed to resend OTP. Please try again.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    const enteredOtp = otp.join('');
-    if (enteredOtp == DEFAULT_OTP) {
-      navigation.navigate('ResetPassword', {user_id: user_id});
-    } else {
-      Dialog.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Invalid OTP',
-        textBody: 'The OTP you entered is incorrect. Please try again.',
-        button: 'Close',
-      });
+  const fetchUserDetail = async userId => {
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append('user_id', userId);
+
+      const response = await axios.post(
+        'https://argosmob.com/being-petz/public/api/v1/auth/my-detail',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      if (!response.data.status) {
+        Alert.alert('Error', 'User does not exist');
+        return;
+      }
+      const user = response.data?.user;
+      await AsyncStorage.setItem('my_Detail', JSON.stringify(user));
+      navigation.navigate(
+        user?.pets?.length > 0 ? 'BottomNavigation' : 'Pet Form',
+      );
+    } catch (error) {
+      console.error('Failed to fetch user detail:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // const handleSubmit = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     const enteredOtp = otp.join('').trim();
+
+  //     if (enteredOtp.length < 6) {
+  //       Alert.alert('Incomplete OTP', 'Please enter all 6 digits of the OTP.');
+  //       return;
+  //     }
+
+  //     // Step 1: Compare with userData?.otp
+  //     if (userData?.otp && enteredOtp !== String(userData.otp)) {
+  //       Alert.alert(
+  //         'Incorrect OTP',
+  //         'The OTP you entered does not match. Please check and try again.',
+  //       );
+  //       setIsLoading(false);
+  //       return;
+  //     }
+
+  //     // Step 2: Only now, call the API (if check passes)
+  //     const formData = new FormData();
+  //     formData.append('user_id', userData?.id || data?.id);
+  //     formData.append('otp', enteredOtp);
+
+  //     const response = await axios.post(
+  //       'https://argosmob.com/being-petz/public/api/v1/auth/register-verify',
+  //       formData,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'multipart/form-data',
+  //         },
+  //       },
+  //     );
+  //     console.log('response', response.data);
+  //     if (response.data?.status) {
+  //       const userId = response.data?.user?.id || userData?.id;
+  //       if (!userId) throw new Error('User ID not available');
+  //       await fetchUserDetail(userId);
+  //     } else {
+  //       Alert.alert(
+  //         'Invalid OTP',
+  //         response.data?.message ||
+  //           'The OTP you entered is incorrect. Please try again.',
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error('Submit error:', error);
+  //     Alert.alert(
+  //       'Error',
+  //       error.response?.data?.message ||
+  //         error.message ||
+  //         'Something went wrong. Please try again.',
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      const enteredOtp = otp.join('').trim();
+      console.log('entered Password', enteredOtp);
+
+      if (enteredOtp.length < 6) {
+        Alert.alert('Incomplete OTP', 'Please enter all 6 digits of the OTP.');
+        setIsLoading(false);
+        return;
+      }
+
+      // First verify against the OTP from userData (if available)
+      if (data?.otp && enteredOtp !== String(otpGenerated)) {
+        Alert.alert(
+          'Incorrect OTP',
+          'The OTP you entered does not match. Please check and try again.',
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // If no userData.otp, or if it matches, then verify with API
+      const formData = new FormData();
+      formData.append('user_id', userData?.id || data?.id);
+      formData.append('otp', enteredOtp);
+
+      const response = await axios.post(
+        'https://argosmob.com/being-petz/public/api/v1/auth/register-verify',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      console.log('API Response:', response.data);
+
+      if (!response.data?.status) {
+        Alert.alert(
+          'Invalid OTP',
+          response.data?.message || 'The OTP you entered is incorrect.',
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Only proceed if API verification succeeds
+      const userId = response.data?.user?.id || data?.id;
+      if (!userId) {
+        throw new Error('User ID not available');
+      }
+
+      await fetchUserDetail(userId);
+    } catch (error) {
+      console.error('Submit error:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message ||
+          error.message ||
+          'Something went wrong. Please try again.',
+      );
+      setIsLoading(false);
     }
   };
 
   const handleChangeText = (text, index) => {
+    // allow only single character numerics
+    const newChar = text.replace(/\D/g, '').slice(0, 1) || '';
     const newOtp = [...otp];
-    newOtp[index] = text;
+    newOtp[index] = newChar;
     setOtp(newOtp);
 
-    // Auto focus to next input
-    if (text && index < 4) {
+    if (newChar && index < 5) {
       inputRefs.current[index + 1].focus();
-    }
-
-    // Auto submit if last digit is entered (but only if OTP is incorrect)
-    if (index === 4 && text) {
-      const enteredOtp = [...newOtp].join('');
-      if (enteredOtp !== DEFAULT_OTP) {
-        handleSubmit();
-      }
     }
   };
 
@@ -88,7 +258,9 @@ const OTP = ({route}) => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
@@ -97,21 +269,16 @@ const OTP = ({route}) => {
 
         <View style={styles.content}>
           <Text style={styles.title}>We just sent an OTP to</Text>
-
           <View style={styles.mobileNumberContainer}>
-            <Text style={styles.mobileNumber}>{emailPhone}</Text>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.goBack();
-              }}>
-              <Text style={styles.editText}>Edit Number</Text>
+            <Text style={styles.mobileNumber}>{email || userData?.email}</Text>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
           </View>
-
           <View style={styles.otpContainer}>
             <Text style={styles.otpLabel}>Enter OTP</Text>
             <View style={styles.otpInputsContainer}>
-              {[0, 1, 2, 3, 4].map(index => (
+              {[0, 1, 2, 3, 4, 5].map(index => (
                 <TextInput
                   key={index}
                   ref={ref => (inputRefs.current[index] = ref)}
@@ -127,11 +294,12 @@ const OTP = ({route}) => {
                   onChangeText={text => handleChangeText(text, index)}
                   onKeyPress={e => handleKeyPress(e, index)}
                   autoFocus={index === 0}
+                  textContentType="oneTimeCode"
+                  importantForAutofill="yes"
                 />
               ))}
             </View>
           </View>
-
           <View style={styles.resendContainer}>
             <Text style={styles.resendText}>Didn't receive?</Text>
             <TouchableOpacity onPress={handleResendOTP} disabled={timer > 0}>
@@ -146,16 +314,19 @@ const OTP = ({route}) => {
           </View>
         </View>
       </ScrollView>
-
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
             styles.submitButton,
-            otp.join('').length < 5 && styles.disabledButton,
+            otp.join('').length < 6 && styles.disabledButton,
           ]}
           onPress={handleSubmit}
-          disabled={otp.join('').length < 5}>
-          <Text style={styles.submitButtonText}>Submit OTP</Text>
+          disabled={otp.join('').length < 6 || isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Submit OTP</Text>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -175,7 +346,6 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 20,
-    // backgroundColor:'#fff'
   },
   content: {
     flex: 1,

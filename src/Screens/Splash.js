@@ -96,7 +96,7 @@ const Splash = () => {
           style={styles.mainLogo2}
           source={require('../Assests/Images/Logo3.png')}
         />
-        <Text style={{color: '#fff', fontSize: 18, marginTop: 200}}>
+        <Text style={{color: '#fff', fontSize: 16, marginTop: 200}}>
           Powered by Rayara Innovations
         </Text>
       </Animated.View>

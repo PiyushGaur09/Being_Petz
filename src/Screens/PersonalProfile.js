@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ALERT_TYPE, Dialog} from 'react-native-alert-notification';
 
 const screenWidth = Dimensions.get('window').width;
-const baseUrl = 'https://argosmob.uk/being-petz/public/';
+const baseUrl = 'https://argosmob.com/being-petz/public/';
 const characterLimit = 30;
 
 const PersonalProfile = ({route}) => {
@@ -171,7 +171,7 @@ const PersonalProfile = ({route}) => {
         <View style={styles.postHeader}>
           <Image
             source={{
-              uri: `https://argosmob.uk/being-petz/public/${item?.parent?.profile}`,
+              uri: `https://argosmob.com/being-petz/public/${item?.parent?.profile}`,
             }}
             style={styles.profileImage}
             onError={() => console.log('Failed to load profile image')}
@@ -206,7 +206,7 @@ const PersonalProfile = ({route}) => {
         {item?.featured_image != null && (
           <Image
             source={{
-              uri: `https://argosmob.uk/being-petz/public/${item.featured_image}`,
+              uri: `https://argosmob.com/being-petz/public/${item.featured_image}`,
             }}
             defaultSource={require('../Assests/Images/dog.png')}
             style={styles.postImage}

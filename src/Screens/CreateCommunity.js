@@ -176,7 +176,7 @@ const CreateCommunity = () => {
       }
 
       const response = await axios.post(
-        'https://argosmob.uk/being-petz/public/api/v1/pet/community/create',
+        'https://argosmob.com/being-petz/public/api/v1/pet/community/create',
         data,
         {
           headers: {'Content-Type': 'multipart/form-data'},

@@ -174,7 +174,7 @@ const EditRecordScreen = () => {
       });
 
       const response = await axios.post(
-        `https://argosmob.uk/being-petz/public/api/v1${config.endpoint}`,
+        `https://argosmob.com/being-petz/public/api/v1${config.endpoint}`,
         formDataToSend,
         {
           headers: {
