@@ -23,7 +23,17 @@ import LinearGradient from 'react-native-linear-gradient';
 const GiveForAdoption2 = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const {petName, petType, breed, gender, dobDate, description} = route.params;
+  const {
+    petName,
+    petType,
+    breed,
+    gender,
+    dobDate,
+    description,
+    latitude,
+    address,
+    longitude,
+  } = route.params;
 
   const [vaccinationDone, setVaccinationDone] = useState('1');
   const [isHealthy, setIsHealthy] = useState('1');
@@ -37,7 +47,7 @@ const GiveForAdoption2 = () => {
 
   const formattedDob = new Date(dobDate).toISOString().split('T')[0]; // YYYY-MM-DD
 
-  console.log('route ', userData);
+  console.log('route ', route?.params);
 
   const fetchUserData = async () => {
     try {
@@ -97,9 +107,9 @@ const GiveForAdoption2 = () => {
     formData.append('about_pet', description);
     formData.append('is_healthy', '0');
     formData.append('vaccination_done', vaccinationDone);
-    formData.append('location', 'noida');
-    formData.append('latitude', '21.000886');
-    formData.append('longitude', '70.8766544');
+    formData.append('location', address);
+    formData.append('latitude', latitude);
+    formData.append('longitude', longitude);
     formData.append('contact_phone', userData?.phone);
     formData.append('contact_email', userData?.email);
     formData.append('is_dewormed', dewormed);
@@ -121,6 +131,8 @@ const GiveForAdoption2 = () => {
       });
     });
 
+    console.log('FormData', formData);
+
     try {
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/pet/create-adoption',
@@ -133,10 +145,13 @@ const GiveForAdoption2 = () => {
         },
       );
 
+      console.log('response', response);
+
       if (response.data?.status) {
         // Alert.alert('Success', 'Pet submitted for adoption successfully');
         // navigation.navigate('Add');
-        navigation.navigate('BottomNavigation');
+        // navigation.navigate('AdoptPet');
+        navigation.replace('AdoptPet');
       } else {
         throw new Error(response.data?.message || 'Submission failed');
       }
@@ -250,15 +265,23 @@ const GiveForAdoption2 = () => {
             }}>
             <Text style={styles.buttonText}>Back</Text>
           </TouchableOpacity> */}
-          <LinearGradient
-            colors={['#8337B2', '#3B0060']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={styles.button}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.goBack()}>
+            <LinearGradient
+              colors={['#8337B2', '#3B0060']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={{
+                width: '100%',
+                padding: 15,
+                borderRadius: 10,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <Text style={styles.buttonText}>Back</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+            </LinearGradient>
+          </TouchableOpacity>
 
           {/* <TouchableOpacity
             style={[styles.button, loading && styles.disabledButton]}
@@ -270,19 +293,28 @@ const GiveForAdoption2 = () => {
               <Text style={styles.buttonText}>Submit</Text>
             )}
           </TouchableOpacity> */}
-          <LinearGradient
-            colors={['#8337B2', '#3B0060']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={loading}
             style={[styles.button, loading && styles.disabledButton]}>
-            <TouchableOpacity onPress={handleSubmit} disabled={loading}>
+            <LinearGradient
+              colors={['#8337B2', '#3B0060']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={{
+                width: '100%',
+                padding: 15,
+                borderRadius: 10,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.buttonText}>Submit</Text>
               )}
-            </TouchableOpacity>
-          </LinearGradient>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </View>
       <FriendRequestsModal
@@ -367,12 +399,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   button: {
-    backgroundColor: '#8337B2',
-    padding: 15,
-    borderRadius: 10,
+    // backgroundColor: '#8337B2',
+    // padding: 15,
     marginVertical: 20,
     alignItems: 'center',
-    width:'40%'
+    width: '40%',
   },
   disabledButton: {
     opacity: 0.7,

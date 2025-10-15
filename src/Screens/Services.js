@@ -41,7 +41,7 @@ const Services = () => {
     fetchUserId();
   }, []);
 
-  console.log('llllll', userId);
+  // console.log('llllll', userId);
 
   const handleFavoritesPress = async () => {
     try {
@@ -83,7 +83,7 @@ const Services = () => {
         onPeoplePress={() => setModalVisible(true)}
       />
 
-      <BannerCarousel/>
+      <BannerCarousel />
 
       <View style={styles.servicesContainer}>
         <View
@@ -112,85 +112,6 @@ const Services = () => {
               marginVertical: 10,
             }}>
             <DiagonalBackgroundCard
-              title="Pet Training"
-              icon={require('../Assests/Images/PetTraining.png')}
-              topLeftColor="#CCEFFF"
-              bottomRightColor="#E8F7FE"
-              onPress={() =>
-                navigation.navigate('Service Description', {
-                  name: 'Pet Training',
-                })
-              }
-            />
-            <DiagonalBackgroundCard
-              title="Pet Store"
-              icon={require('../Assests/Images/PetStore.png')}
-              topLeftColor="#B2FFDB"
-              bottomRightColor="#EAF9F2"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Pet Store'})
-              }
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              marginVertical: 10,
-            }}>
-            <DiagonalBackgroundCard
-              title="Pet Grooming"
-              icon={require('../Assests/Images/PetGrooming.png')}
-              topLeftColor="#BDCBFF"
-              bottomRightColor="#F0F3FE"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Grooming'})
-              }
-            />
-            <DiagonalBackgroundCard
-              title="Pet Boarding"
-              icon={require('../Assests/Images/PetShelter.png')}
-              topLeftColor="#FFDFC4"
-              bottomRightColor="#FAF2EB"
-              onPress={() =>
-                navigation.navigate('Service Description', {
-                  name: 'Pet Shelter',
-                })
-              }
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              marginVertical: 10,
-            }}>
-            <DiagonalBackgroundCard
-              title="Pet Walker"
-              icon={require('../Assests/Images/PetSitter.png')}
-              topLeftColor="#A3EBEE"
-              bottomRightColor="#D4F5F6"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Pet Walker'})
-              }
-            />
-            <DiagonalBackgroundCard
-              title="Veterinary"
-              icon={require('../Assests/Images/PetTracking.png')}
-              topLeftColor="#DCFBAD"
-              bottomRightColor="#F5FAEB"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Veterinary'})
-              }
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              marginVertical: 10,
-            }}>
-            <DiagonalBackgroundCard
               title="Pet Adoption"
               icon={require('../Assests/Images/PetAdoption.png')}
               topLeftColor="#C8A8FF"
@@ -205,7 +126,91 @@ const Services = () => {
               onPress={() => navigation.navigate('LostPet')}
             />
           </View>
-
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginVertical: 10,
+            }}>
+            <DiagonalBackgroundCard
+              title="Pet Training"
+              icon={require('../Assests/Images/PetTraining.png')}
+              topLeftColor="#CCEFFF"
+              bottomRightColor="#E8F7FE"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {
+              //     name: 'Pet Training',
+              //   })
+              // }
+            />
+            <DiagonalBackgroundCard
+              title="Pet Store"
+              icon={require('../Assests/Images/PetStore.png')}
+              topLeftColor="#B2FFDB"
+              bottomRightColor="#EAF9F2"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Pet Store'})
+              // }
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginVertical: 10,
+            }}>
+            <DiagonalBackgroundCard
+              title="Pet Grooming"
+              icon={require('../Assests/Images/PetGrooming.png')}
+              topLeftColor="#BDCBFF"
+              bottomRightColor="#F0F3FE"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Grooming'})
+              // }
+            />
+            <DiagonalBackgroundCard
+              title="Pet Boarding"
+              icon={require('../Assests/Images/PetShelter.png')}
+              topLeftColor="#FFDFC4"
+              bottomRightColor="#FAF2EB"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {
+              //     name: 'Pet Shelter',
+              //   })
+              // }
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginVertical: 10,
+            }}>
+            <DiagonalBackgroundCard
+              title="Pet Walker"
+              icon={require('../Assests/Images/PetSitter.png')}
+              topLeftColor="#A3EBEE"
+              bottomRightColor="#D4F5F6"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Pet Walker'})
+              // }
+            />
+            <DiagonalBackgroundCard
+              title="Veterinary"
+              icon={require('../Assests/Images/PetTracking.png')}
+              topLeftColor="#DCFBAD"
+              bottomRightColor="#F5FAEB"
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Veterinary'})
+              // }
+            />
+          </View>
           <View
             style={{
               flexDirection: 'row',
@@ -217,18 +222,20 @@ const Services = () => {
               icon={require('../Assests/Images/PetSitter.png')}
               topLeftColor="#A3EBEE"
               bottomRightColor="#D4F5F6"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Pet Sitter'})
-              }
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Pet Sitter'})
+              // }
             />
             <DiagonalBackgroundCard
               title="Pet Resort"
               icon={require('../Assests/Images/PetTracking.png')}
               topLeftColor="#DCFBAD"
               bottomRightColor="#F5FAEB"
-              onPress={() =>
-                navigation.navigate('Service Description', {name: 'Pet Resort'})
-              }
+              badgeText={'Coming Soon 🔥'}
+              // onPress={() =>
+              //   navigation.navigate('Service Description', {name: 'Pet Resort'})
+              // }
             />
           </View>
         </View>

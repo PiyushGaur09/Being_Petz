@@ -426,6 +426,7 @@ const breedData = {
     'Fighter',
   ],
 };
+
 const AddLostAndFound = () => {
   useEffect(() => {
     const fetchUserData = async () => {
@@ -448,7 +449,7 @@ const AddLostAndFound = () => {
 
   const [formData, setFormData] = useState({
     user_id: '',
-    phone: '',
+    phone: '+91',
     report_type: 'lost',
     pet_type: 'dog',
     pet_gender: 'male',
@@ -456,12 +457,20 @@ const AddLostAndFound = () => {
     pet_dob: '',
     about_pet: '',
     location: '',
+    locality: '',
+    city: '',
+    state: '',
     occurred_at: '',
     isVaccinated: '',
     isDewormed: '',
     isHealthy: '',
     images: [],
+    latitude: '',
+    longitude: '',
+    address: '', // Added for full address
   });
+
+  console.log('Address', formData?.address);
 
   // Dropdown states
   const [reportTypeOpen, setReportTypeOpen] = useState(false);
@@ -514,6 +523,13 @@ const AddLostAndFound = () => {
     {label: 'No', value: '1'},
   ]);
 
+  // Location dropdown states
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationValue, setLocationValue] = useState(null);
+  const [locationItems, setLocationItems] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateField, setDateField] = useState('');
@@ -528,6 +544,106 @@ const AddLostAndFound = () => {
       setBreedValue(null); // Reset breed selection when pet type changes
     }
   }, [petTypeValue]);
+
+  // Search for locations when searchText changes
+  useEffect(() => {
+    if (searchText.length > 2) {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+
+      const timeout = setTimeout(() => {
+        searchLocations(searchText);
+      }, 500);
+
+      setSearchTimeout(timeout);
+    }
+  }, [searchText]);
+
+  const searchLocations = async query => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+          query,
+        )}&types=geocode&key=AIzaSyAonK15hotzDslX4ePjIbmizRii-7Ng4QE`,
+        {timeout: 10000},
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const data = await response.json();
+
+      if (data.status === 'OK') {
+        const locations = data.predictions.map(prediction => ({
+          label: prediction.description,
+          value: prediction.place_id,
+        }));
+        setLocationItems(locations);
+      }
+    } catch (error) {
+      console.error('Error searching locations:', error);
+      Alert.alert('Error', 'Failed to search locations');
+    }
+  };
+
+  const handleLocationSelect = async placeId => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,address_component&key=AIzaSyAonK15hotzDslX4ePjIbmizRii-7Ng4QE`,
+        {timeout: 10000},
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const data = await response.json();
+      if (data.status === 'OK') {
+        const {lat, lng} = data.result.geometry.location;
+        const address = data.result.formatted_address;
+
+        // Extract locality, city, and state from address components
+        let locality = '';
+        let city = '';
+        let state = '';
+
+        if (data.result.address_components) {
+          data.result.address_components.forEach(component => {
+            if (component.types.includes('locality')) {
+              locality = component.long_name;
+            }
+            if (component.types.includes('administrative_area_level_2')) {
+              city = component.long_name;
+            }
+            if (component.types.includes('administrative_area_level_1')) {
+              state = component.long_name;
+            }
+          });
+        }
+
+        // Create a more readable location string
+        const locationString = [locality, city, state]
+          .filter(Boolean)
+          .join(', ');
+
+        setFormData(prev => ({
+          ...prev,
+          location: locationString || address,
+          address: address,
+          locality: locality,
+          city: city,
+          state: state,
+          latitude: lat.toString(),
+          longitude: lng.toString(),
+        }));
+        setSearchText(locationString || address);
+        setLocationOpen(false);
+      }
+    } catch (error) {
+      console.error('Error fetching location details:', error);
+      Alert.alert('Error', 'Failed to get location details');
+    }
+  };
 
   const handleInputChange = (name, value) => {
     setFormData({
@@ -590,6 +706,11 @@ const AddLostAndFound = () => {
       return;
     }
 
+    if (!formData.location) {
+      Alert.alert('Error', 'Please select a location');
+      return;
+    }
+
     setLoading(true);
     try {
       const data = new FormData();
@@ -604,6 +725,10 @@ const AddLostAndFound = () => {
         isVaccinated: vaccinatedValue,
         isDewormed: dewormedValue,
         isHealthy: healthyValue,
+        // locality: formData.locality,
+        // city: formData.city,
+        // state: formData.state,
+        location: formData?.address,
       };
 
       // Append all form fields
@@ -624,6 +749,8 @@ const AddLostAndFound = () => {
         }
       });
 
+      console.log('complete Form Data', completeFormData);
+
       const response = await axios.post(
         `${BASE_URL}/pet/lost-found/store`,
         data,
@@ -634,16 +761,22 @@ const AddLostAndFound = () => {
         },
       );
 
+      console.log('response', response);
+
       if (response.data.status) {
-        Alert.alert('Success', 'Report submitted successfully', [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-              route.params?.onRefresh?.();
+        if (response.data.status) {
+          Alert.alert('Success', 'Report submitted successfully', [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.replace('LostPet', {
+                  active: reportTypeValue,
+                  refresh: true,
+                });
+              },
             },
-          },
-        ]);
+          ]);
+        }
       } else {
         Alert.alert(
           'Error',
@@ -663,7 +796,7 @@ const AddLostAndFound = () => {
       <Text style={styles.header}>Report Lost/Found Pet</Text>
 
       {/* Report Type Dropdown */}
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, {zIndex: 7000}]}>
         <Text style={styles.label}>Report Type</Text>
         <DropDownPicker
           open={reportTypeOpen}
@@ -675,13 +808,13 @@ const AddLostAndFound = () => {
           placeholder="Select report type"
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownContainer}
-          zIndex={6000}
+          zIndex={7000}
           zIndexInverse={1000}
         />
       </View>
 
       {/* Pet Type Dropdown */}
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, {zIndex: 6000}]}>
         <Text style={styles.label}>Pet Type</Text>
         <DropDownPicker
           open={petTypeOpen}
@@ -693,13 +826,13 @@ const AddLostAndFound = () => {
           placeholder="Select pet type"
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownContainer}
-          zIndex={5000}
+          zIndex={6000}
           zIndexInverse={2000}
         />
       </View>
 
       {/* Gender Dropdown */}
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, {zIndex: 5000}]}>
         <Text style={styles.label}>Gender</Text>
         <DropDownPicker
           open={genderOpen}
@@ -711,13 +844,13 @@ const AddLostAndFound = () => {
           placeholder="Select gender"
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownContainer}
-          zIndex={4000}
+          zIndex={5000}
           zIndexInverse={3000}
         />
       </View>
 
       {/* Breed Dropdown */}
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, {zIndex: 4000}]}>
         <Text style={styles.label}>Breed</Text>
         <DropDownPicker
           open={breedOpen}
@@ -730,7 +863,7 @@ const AddLostAndFound = () => {
           disabled={!petTypeValue}
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownContainer}
-          zIndex={3000}
+          zIndex={4000}
           zIndexInverse={4000}
           searchable={true}
         />
@@ -745,6 +878,7 @@ const AddLostAndFound = () => {
           onChangeText={text => handleInputChange('phone', text)}
           placeholder="Enter Phone"
           keyboardType="phone-pad"
+          maxLength={13}
         />
       </View>
 
@@ -766,7 +900,7 @@ const AddLostAndFound = () => {
 
       {/* Vaccination Status (only for lost reports) */}
       {reportTypeValue === 'lost' && (
-        <View style={styles.inputGroup}>
+        <View style={[styles.inputGroup, {zIndex: 3500}]}>
           <Text style={styles.label}>Is Vaccinated</Text>
           <DropDownPicker
             open={vaccinatedOpen}
@@ -778,7 +912,7 @@ const AddLostAndFound = () => {
             placeholder="Select vaccination status"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
-            zIndex={2500}
+            zIndex={3500}
             zIndexInverse={3500}
           />
         </View>
@@ -786,7 +920,7 @@ const AddLostAndFound = () => {
 
       {/* Dewormed Status (only for lost reports) */}
       {reportTypeValue === 'lost' && (
-        <View style={styles.inputGroup}>
+        <View style={[styles.inputGroup, {zIndex: 3000}]}>
           <Text style={styles.label}>Is Dewormed</Text>
           <DropDownPicker
             open={dewormedOpen}
@@ -798,7 +932,7 @@ const AddLostAndFound = () => {
             placeholder="Select deworming status"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
-            zIndex={2000}
+            zIndex={3000}
             zIndexInverse={4000}
           />
         </View>
@@ -806,7 +940,7 @@ const AddLostAndFound = () => {
 
       {/* Health Status (only for lost reports) */}
       {reportTypeValue === 'lost' && (
-        <View style={styles.inputGroup}>
+        <View style={[styles.inputGroup, {zIndex: 2500}]}>
           <Text style={styles.label}>Is Neutered</Text>
           <DropDownPicker
             open={healthyOpen}
@@ -818,7 +952,7 @@ const AddLostAndFound = () => {
             placeholder="Select health status"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
-            zIndex={1500}
+            zIndex={2500}
             zIndexInverse={4500}
           />
         </View>
@@ -841,20 +975,50 @@ const AddLostAndFound = () => {
         />
       </View>
 
-      {/* Location */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Location</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.location}
-          onChangeText={text => handleInputChange('location', text)}
+      {/* Location Dropdown */}
+      <View style={[styles.inputGroup, {zIndex: 2000}]}>
+        <Text style={styles.label}>
+          {reportTypeValue === 'lost' ? 'Location Lost' : 'Location Found'}
+        </Text>
+        <DropDownPicker
+          open={locationOpen}
+          value={locationValue}
+          items={locationItems}
+          setOpen={setLocationOpen}
+          setValue={setLocationValue}
+          setItems={setLocationItems}
           placeholder={
             reportTypeValue === 'lost'
-              ? 'Where was the pet lost?'
-              : 'Where did you find the pet?'
+              ? 'Search for location where pet was lost'
+              : 'Search for location where pet was found'
           }
+          searchable={true}
+          searchPlaceholder="Type to search for locality, city, or state..."
+          searchTextInputProps={{
+            value: searchText,
+            onChangeText: setSearchText,
+          }}
+          onSelectItem={item => handleLocationSelect(item.value)}
+          style={styles.dropdown}
+          dropDownContainerStyle={styles.dropdownContainer}
+          zIndex={2000}
+          zIndexInverse={5000}
         />
       </View>
+
+      {/* Address Display (read-only) */}
+      {formData.address ? (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Full Address</Text>
+          <TextInput
+            style={[styles.input, styles.readOnlyInput]}
+            value={formData.address}
+            placeholder="Address will appear here"
+            editable={false}
+            multiline
+          />
+        </View>
+      ) : null}
 
       {/* Occurred At */}
       <View style={styles.inputGroup}>
@@ -911,7 +1075,7 @@ const AddLostAndFound = () => {
           <Text style={styles.submitButtonText}>
             {reportTypeValue === 'lost'
               ? 'Submit Lost Report'
-              : 'Contact Reporter'}
+              : 'Submit Found Report'}
           </Text>
         )}
       </TouchableOpacity>
@@ -961,6 +1125,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  readOnlyInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#666',
   },
   dropdown: {
     backgroundColor: '#fff',

@@ -25,11 +25,8 @@ const FriendRequestsModal = ({visible, onClose}) => {
     loading: false,
     userData: null,
     activeTab: 'received',
-    processingRequest: null, // Track which request is being processed
+    processingRequest: null,
   });
-
-  // console.log('state', state.sentRequests, state.receivedRequests);
-  // console.log('state5', currentRequests);
 
   // Memoized values
   const currentRequests = useMemo(
@@ -93,7 +90,7 @@ const FriendRequestsModal = ({visible, onClose}) => {
     } finally {
       setState(prev => ({...prev, loading: false}));
     }
-  }, []);
+  }, [fetchUserData]);
 
   const handleRequestResponse = useCallback(
     async (requestId, action) => {
@@ -166,7 +163,9 @@ const FriendRequestsModal = ({visible, onClose}) => {
             defaultSource={DEFAULT_AVATAR}
           />
           <View style={styles.requestInfo}>
-            <Text style={styles.name}>{`${user?.first_name} ${user?.last_name}` || 'Unknown User'}</Text>
+            <Text style={styles.name}>
+              {`${user?.first_name} ${user?.last_name}` || 'Unknown User'}
+            </Text>
             <Text style={styles.breed}>{user?.email || ''}</Text>
             {item?.created_at && (
               <Text style={styles.requestDate}>
@@ -224,29 +223,42 @@ const FriendRequestsModal = ({visible, onClose}) => {
   );
 
   const renderTabButton = useCallback(
-    (tab, label) => (
-      <TouchableOpacity
-        style={[styles.tabButton, state.activeTab === tab && styles.activeTab]}
-        onPress={() => setState(prev => ({...prev, activeTab: tab}))}
-        disabled={state.loading}>
-        <View style={styles.tabContent}>
-          <Text
-            style={[
-              styles.tabText,
-              state.activeTab === tab && styles.activeTabText,
-            ]}>
-            {label}
-          </Text>
-          {state[`${tab}Requests`].length > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {state[`${tab}Requests`].length}
-              </Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    ),
+    (tab, label) => {
+      const hasPending =
+        tab === 'received' && state.receivedRequests.length > 0;
+
+      return (
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            state.activeTab === tab && styles.activeTab,
+          ]}
+          onPress={() => setState(prev => ({...prev, activeTab: tab}))}
+          disabled={state.loading}>
+          <View style={styles.tabContent}>
+            <Text
+              style={[
+                styles.tabText,
+                state.activeTab === tab && styles.activeTabText,
+              ]}>
+              {label}
+            </Text>
+
+            {/* Count badge */}
+            {state[`${tab}Requests`].length > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {state[`${tab}Requests`].length}
+                </Text>
+              </View>
+            )}
+
+            {/* 🔴 Red dot for Received */}
+            {hasPending && <View style={styles.redDot} />}
+          </View>
+        </TouchableOpacity>
+      );
+    },
     [
       state.activeTab,
       state.receivedRequests.length,
@@ -385,6 +397,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  redDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'red',
+    marginLeft: 6,
+  },
   loader: {
     marginVertical: 20,
   },
@@ -440,41 +459,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 5,
     gap: 8,
-  },
-  acceptButton: {
-    backgroundColor: '#8337B2',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    flex: 1,
-  },
-  rejectButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#8337B2',
-    flex: 1,
-  },
-  cancelButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ff4444',
-    flex: 1,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  cancelText: {
-    color: '#ff4444',
-    fontWeight: '600',
-    textAlign: 'center',
   },
   statusContainer: {
     flexDirection: 'row',

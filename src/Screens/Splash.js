@@ -63,7 +63,7 @@ const Splash = () => {
 
   return (
     <LinearGradient
-      colors={['#8337B2', '#3B0060']} // Adjust colors as needed
+      colors={['#8337B2', '#3B0060']} 
       start={{x: 0, y: 0}}
       end={{x: 1, y: 1}}
       style={styles.container}>

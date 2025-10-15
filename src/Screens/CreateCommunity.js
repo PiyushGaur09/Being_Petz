@@ -175,6 +175,8 @@ const CreateCommunity = () => {
         });
       }
 
+      console.log('jjj', formData);
+
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/pet/community/create',
         data,
@@ -183,6 +185,8 @@ const CreateCommunity = () => {
           timeout: 10000,
         },
       );
+
+      console.log('jjjdjdj', response);
 
       if (response.data?.status) {
         Alert.alert('Success', 'Community created successfully!');
@@ -468,7 +472,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#8337B2',
     fontSize: 14,
-    textAlign:'center'
+    textAlign: 'center',
   },
   imagePreview: {
     width: '100%',

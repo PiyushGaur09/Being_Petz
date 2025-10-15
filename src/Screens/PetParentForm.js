@@ -11,29 +11,44 @@
 //   Platform,
 //   ActivityIndicator,
 //   Alert,
+//   TextInput,
 // } from 'react-native';
-// import {TextInput} from 'react-native-paper';
 // import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 // import {useNavigation} from '@react-navigation/native';
 // import LinearGradient from 'react-native-linear-gradient';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import ImagePicker from 'react-native-image-crop-picker';
 // import axios from 'axios';
+// import DropDownPicker from 'react-native-dropdown-picker';
+// import DateTimePicker from '@react-native-community/datetimepicker';
 
-// const PetParentForm = () => {
+// const PetParentForm = ({route}) => {
 //   const navigation = useNavigation();
-//   const [firstName, setFirstName] = useState('');
-//   const [lastName, setLastName] = useState('');
-//   const [email, setEmail] = useState('');
-//   const [phoneNumber, setPhoneNumber] = useState('');
+//   const [formData, setFormData] = useState({
+//     firstName: '',
+//     lastName: '',
+//     email: '',
+//     phone: '',
+//     city: '',
+//     latitude: '',
+//     longitude: '',
+//   });
+
+//   // Dropdown states
+//   const [cityOpen, setCityOpen] = useState(false);
+//   const [cityValue, setCityValue] = useState(null);
+//   const [cityItems, setCityItems] = useState([]);
+//   const [searchText, setSearchText] = useState('');
+//   const [debouncedSearch, setDebouncedSearch] = useState('');
+
 //   const [userData, setUserData] = useState(null);
 //   const [modalVisible, setModalVisible] = useState(false);
 //   const [isLoading, setIsLoading] = useState(true);
-//   const [searchText, setSearchText] = useState('');
-//   const [suggestions, setSuggestions] = useState([]);
-//   const [selectedCity, setSelectedCity] = useState(null);
-//   const [debouncedSearch, setDebouncedSearch] = useState('');
 //   const [isUpdating, setIsUpdating] = useState(false);
+
+//   console.log('params', route?.params);
+
+//   const {screen} = route?.params;
 
 //   // Debounce the search input
 //   useEffect(() => {
@@ -43,23 +58,17 @@
 //     return () => clearTimeout(timer);
 //   }, [searchText]);
 
-//   // Fetch suggestions when debounced search changes
+//   // Fetch city suggestions when debounced search changes
 //   useEffect(() => {
 //     if (debouncedSearch.length > 2) {
 //       fetchCitySuggestions(debouncedSearch);
 //     } else {
-//       setSuggestions([]);
+//       setCityItems([]);
 //     }
 //   }, [debouncedSearch]);
 
 //   const fetchCitySuggestions = async input => {
 //     try {
-//       const isConnected = await checkNetworkConnection();
-//       if (!isConnected) {
-//         Alert.alert('No Internet', 'Please check your internet connection');
-//         return;
-//       }
-
 //       const response = await fetch(
 //         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
 //           input,
@@ -72,31 +81,18 @@
 
 //       const data = await response.json();
 //       if (data.status === 'OK') {
-//         setSuggestions(data.predictions);
+//         const items = data.predictions.map(prediction => ({
+//           label: prediction.description,
+//           value: prediction.place_id,
+//         }));
+//         setCityItems(items);
 //       } else {
-//         console.error(
-//           'Google Places API error:',
-//           data.status,
-//           data.error_message,
-//         );
-//         setSuggestions([]);
+//         console.error('Google Places API error:', data.status);
+//         setCityItems([]);
 //       }
 //     } catch (error) {
 //       console.error('Error fetching city suggestions:', error);
-//       Alert.alert(
-//         'Error',
-//         'Failed to fetch city suggestions. Please try again.',
-//       );
-//       setSuggestions([]);
-//     }
-//   };
-
-//   const checkNetworkConnection = async () => {
-//     try {
-//       const response = await fetch('https://www.google.com', {method: 'HEAD'});
-//       return true;
-//     } catch (error) {
-//       return false;
+//       setCityItems([]);
 //     }
 //   };
 
@@ -111,21 +107,21 @@
 //         throw new Error(`HTTP error! status: ${response.status}`);
 
 //       const data = await response.json();
+
 //       if (data.status === 'OK') {
 //         const {lat, lng} = data.result.geometry.location;
-//         setSelectedCity({
-//           name: data.result.name,
-//           latitude: lat,
-//           longitude: lng,
-//         });
+//         setFormData(prev => ({
+//           ...prev,
+//           city: data.result.name,
+//           latitude: lat.toString(),
+//           longitude: lng.toString(),
+//         }));
 //         setSearchText(data.result.name);
-//         setSuggestions([]);
-//       } else {
-//         throw new Error(data.error_message || 'Failed to get city details');
+//         setCityOpen(false);
 //       }
 //     } catch (error) {
 //       console.error('Error fetching city details:', error);
-//       Alert.alert('Error', 'Failed to get city details. Please try again.');
+//       Alert.alert('Error', 'Failed to get city details');
 //     }
 //   };
 
@@ -155,10 +151,7 @@
 
 //       return response.data?.user || null;
 //     } catch (error) {
-//       console.error(
-//         'Fetch user details error:',
-//         error.response?.data || error.message,
-//       );
+//       console.error('Fetch user details error:', error);
 //       throw error;
 //     }
 //   };
@@ -170,12 +163,16 @@
 
 //       if (userDetails) {
 //         setUserData(userDetails);
-//         setFirstName(userDetails.first_name || '');
-//         setLastName(userDetails.last_name || '');
-//         setEmail(userDetails.email || '');
-//         setPhoneNumber(userDetails.phone || '');
+//         setFormData({
+//           firstName: userDetails.first_name || '',
+//           lastName: userDetails.last_name || '',
+//           email: userDetails.email || '',
+//           phone: userDetails.phone || '',
+//           city: userDetails.city || '',
+//           latitude: userDetails.latitude || '',
+//           longitude: userDetails.longitude || '',
+//         });
 
-//         // Set initial city if available
 //         if (userDetails.city) {
 //           setSearchText(userDetails.city);
 //         }
@@ -307,24 +304,24 @@
 //   };
 
 //   const validateForm = () => {
-//     if (!firstName.trim()) {
+//     if (!formData.firstName.trim()) {
 //       Alert.alert('Error', 'First name is required');
 //       return false;
 //     }
-//     if (!lastName.trim()) {
+//     if (!formData.lastName.trim()) {
 //       Alert.alert('Error', 'Last name is required');
 //       return false;
 //     }
-//     if (!email.trim()) {
+//     if (!formData.email.trim()) {
 //       Alert.alert('Error', 'Email is required');
 //       return false;
 //     }
-//     if (!phoneNumber.trim()) {
+//     if (!formData.phone.trim()) {
 //       Alert.alert('Error', 'Phone number is required');
 //       return false;
 //     }
-//     if (!selectedCity) {
-//       Alert.alert('Error', 'Please select a city from the list');
+//     if (!formData.city) {
+//       Alert.alert('Error', 'Please select a city');
 //       return false;
 //     }
 //     return true;
@@ -339,25 +336,22 @@
 
 //     setIsUpdating(true);
 //     try {
-//       // Format phone number if needed
-//       const formattedPhone = phoneNumber.startsWith('+')
-//         ? phoneNumber
-//         : `+91 ${phoneNumber}`;
+//       const formattedPhone = formData.phone.startsWith('+')
+//         ? formData.phone
+//         : `+91 ${formData.phone}`;
 
-//       const formData = new FormData();
-//       formData.append('user_id', String(userData.id));
-//       formData.append('first_name', firstName.trim());
-//       formData.append('last_name', lastName.trim());
-//       formData.append('email', email.trim());
-//       formData.append('phone', formattedPhone.trim());
-//       formData.append('latitude', String(selectedCity.latitude));
-//       formData.append('longitude', String(selectedCity.longitude));
-
-//       console.log('formData', formData);
+//       const data = new FormData();
+//       data.append('user_id', String(userData.id));
+//       data.append('first_name', formData.firstName.trim());
+//       data.append('last_name', formData.lastName.trim());
+//       data.append('email', formData.email.trim());
+//       data.append('phone', formattedPhone.trim());
+//       data.append('latitude', formData.latitude);
+//       data.append('longitude', formData.longitude);
 
 //       const response = await axios.post(
 //         'https://argosmob.com/being-petz/public/api/v1/auth/update-profile',
-//         formData,
+//         data,
 //         {
 //           headers: {
 //             'Content-Type': 'multipart/form-data',
@@ -369,7 +363,11 @@
 
 //       if (response.data.status) {
 //         Alert.alert('Success', 'Profile updated successfully');
-//         navigation.goBack();
+//         if (screen === 'otp') {
+//           navigation.navigate('Add Pet', {screen: 'PetParentForm'}); // make sure name matches your navigator
+//         } else {
+//           navigation.goBack();
+//         }
 //       } else {
 //         throw new Error(response.data.message || 'Update failed');
 //       }
@@ -398,123 +396,113 @@
 //   }
 
 //   return (
-//     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-//       <View style={{alignItems: 'center'}}>
-//         <View style={styles.header}>
-//           <TouchableOpacity onPress={() => navigation.goBack()}>
-//             <Icon name="arrow-left" size={24} color="#1E2123" />
-//           </TouchableOpacity>
-//           <Text style={styles.heading}>Pet Parent Profile</Text>
-//         </View>
-
-//         <View style={styles.profileOuterContainer}>
-//           <View style={styles.profileContainer}>
-//             <Image
-//               source={{
-//                 uri: userData?.profile
-//                   ? `https://argosmob.com/being-petz/public/${userData.profile}`
-//                   : 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/No_image_available_500_x_500.svg/750px-No_image_available_500_x_500.svg.png?20150903190949',
-//               }}
-//               style={styles.profileImage}
-//             />
-//             <TouchableOpacity
-//               onPress={() => setModalVisible(true)}
-//               style={styles.cameraIcon}>
-//               <Icon name="camera" size={24} color="#39434F" />
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-
-//         <Text style={styles.sectionTitle}>First Name</Text>
-//         <View style={styles.locationinput}>
-//           <TextInput
-//             mode="outlined"
-//             value={firstName}
-//             onChangeText={setFirstName}
-//             style={styles.input}
-//             placeholder="First Name"
-//             theme={inputTheme}
-//           />
-//         </View>
-
-//         <Text style={styles.sectionTitle}>Last Name</Text>
-//         <View style={styles.locationinput}>
-//           <TextInput
-//             mode="outlined"
-//             value={lastName}
-//             onChangeText={setLastName}
-//             style={styles.input}
-//             placeholder="Last Name"
-//             theme={inputTheme}
-//           />
-//         </View>
-
-//         <Text style={styles.sectionTitle}>Email</Text>
-//         <View style={styles.locationinput}>
-//           <TextInput
-//             mode="outlined"
-//             keyboardType="email-address"
-//             value={email}
-//             onChangeText={setEmail}
-//             style={styles.input}
-//             placeholder="Email"
-//             theme={inputTheme}
-//           />
-//         </View>
-
-//         <Text style={styles.sectionTitle}>Phone Number</Text>
-//         <View style={styles.locationinput}>
-//           <TextInput
-//             mode="outlined"
-//             keyboardType="phone-pad"
-//             value={phoneNumber}
-//             onChangeText={setPhoneNumber}
-//             style={styles.input}
-//             placeholder="Phone Number (include country code)"
-//             theme={inputTheme}
-//           />
-//         </View>
-
-//         <Text style={styles.sectionTitle}>Location</Text>
-//         <View style={styles.locationinput}>
-//           <TextInput
-//             mode="outlined"
-//             value={searchText}
-//             onChangeText={setSearchText}
-//             style={styles.input}
-//             placeholder="Search for your city"
-//             theme={inputTheme}
-//           />
-//         </View>
-
-//         <View style={styles.suggestionsContainer}>
-//           {suggestions.map(item => (
-//             <TouchableOpacity
-//               key={item.place_id}
-//               style={styles.suggestionItem}
-//               onPress={() => handleCitySelect(item.place_id)}>
-//               <Text>{item.description}</Text>
-//             </TouchableOpacity>
-//           ))}
-//         </View>
-
-//         <TouchableOpacity
-//           onPress={handleUpdateProfile}
-//           style={styles.button}
-//           disabled={isUpdating}>
-//           <LinearGradient
-//             colors={['#8337B2', '#3B0060']}
-//             start={{x: 0, y: 0}}
-//             end={{x: 1, y: 1}}
-//             style={styles.gradient}>
-//             {isUpdating ? (
-//               <ActivityIndicator size="small" color="#fff" />
-//             ) : (
-//               <Text style={styles.buttonText}>Confirm</Text>
-//             )}
-//           </LinearGradient>
+//     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+//       <View style={styles.header}>
+//         <TouchableOpacity onPress={() => navigation.goBack()}>
+//           <Icon name="arrow-left" size={24} color="#8337B2" />
 //         </TouchableOpacity>
+//         <Text style={styles.heading}>Pet Parent Profile</Text>
 //       </View>
+
+//       <View style={styles.profileOuterContainer}>
+//         <View style={styles.profileContainer}>
+//           <Image
+//             source={{
+//               uri: userData?.profile
+//                 ? `https://argosmob.com/being-petz/public/${userData.profile}`
+//                 : 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/No_image_available_500_x_500.svg/750px-No_image_available_500_x_500.svg.png?20150903190949',
+//             }}
+//             style={styles.profileImage}
+//           />
+//           <TouchableOpacity
+//             onPress={() => setModalVisible(true)}
+//             style={styles.cameraIcon}>
+//             <Icon name="camera" size={24} color="#39434F" />
+//           </TouchableOpacity>
+//         </View>
+//       </View>
+
+//       <View style={styles.inputGroup}>
+//         <Text style={styles.label}>First Name</Text>
+//         <TextInput
+//           style={styles.input}
+//           value={formData.firstName}
+//           onChangeText={text => setFormData({...formData, firstName: text})}
+//           placeholder="First Name"
+//         />
+//       </View>
+
+//       <View style={styles.inputGroup}>
+//         <Text style={styles.label}>Last Name</Text>
+//         <TextInput
+//           style={styles.input}
+//           value={formData.lastName}
+//           onChangeText={text => setFormData({...formData, lastName: text})}
+//           placeholder="Last Name"
+//         />
+//       </View>
+
+//       <View style={styles.inputGroup}>
+//         <Text style={styles.label}>Email</Text>
+//         <TextInput
+//           style={styles.input}
+//           value={formData.email}
+//           onChangeText={text => setFormData({...formData, email: text})}
+//           placeholder="Email"
+//           keyboardType="email-address"
+//         />
+//       </View>
+
+//       <View style={styles.inputGroup}>
+//         <Text style={styles.label}>Phone Number</Text>
+//         <TextInput
+//           style={styles.input}
+//           value={formData.phone}
+//           onChangeText={text => setFormData({...formData, phone: text})}
+//           placeholder="Phone Number (include country code)"
+//           keyboardType="phone-pad"
+//           maxLength={15}
+//         />
+//       </View>
+
+//       <View style={styles.inputGroup}>
+//         <Text style={styles.label}>Location</Text>
+//         <DropDownPicker
+//           open={cityOpen}
+//           value={cityValue}
+//           items={cityItems}
+//           setOpen={setCityOpen}
+//           setValue={setCityValue}
+//           setItems={setCityItems}
+//           placeholder="Search for your city"
+//           searchable={true}
+//           searchPlaceholder="Type to search cities..."
+//           searchTextInputProps={{
+//             value: searchText,
+//             onChangeText: setSearchText,
+//           }}
+//           onSelectItem={item => handleCitySelect(item.value)}
+//           style={styles.dropdown}
+//           dropDownContainerStyle={styles.dropdownContainer}
+//         />
+//       </View>
+
+//       <TouchableOpacity
+//         style={styles.submitButton}
+//         onPress={handleUpdateProfile}
+//         disabled={isUpdating}>
+//         <LinearGradient
+//           colors={['#8337B2', '#3B0060']}
+//           start={{x: 0, y: 0}}
+//           end={{x: 1, y: 1}}
+//           style={styles.gradient}>
+//           {isUpdating ? (
+//             <ActivityIndicator size="small" color="#fff" />
+//           ) : (
+//             <Text style={styles.buttonText}>Confirm</Text>
+//           )}
+//         </LinearGradient>
+//       </TouchableOpacity>
 
 //       <Modal
 //         transparent={true}
@@ -548,22 +536,14 @@
 //   );
 // };
 
-// const inputTheme = {
-//   roundness: 20,
-//   colors: {
-//     background: '#fff',
-//     primary: 'grey',
-//     text: '#000',
-//     placeholder: '#444',
-//   },
-// };
-
 // const styles = StyleSheet.create({
 //   container: {
 //     flex: 1,
-//     paddingHorizontal: 16,
-//     paddingVertical: 20,
-//     backgroundColor: '#fff',
+//     backgroundColor: '#f8f8f8',
+//   },
+//   content: {
+//     padding: 20,
+//     paddingBottom: 40,
 //   },
 //   loadingContainer: {
 //     flex: 1,
@@ -573,7 +553,14 @@
 //   header: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
-//     width: '100%',
+//     marginBottom: 20,
+//   },
+//   heading: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     color: '#8337B2',
+//     marginLeft: '20%',
+//     flex: 1,
 //   },
 //   profileOuterContainer: {
 //     marginVertical: 30,
@@ -582,6 +569,7 @@
 //     padding: 15,
 //     borderRadius: 80,
 //     borderColor: '#8337B2',
+//     alignSelf: 'center',
 //   },
 //   profileContainer: {
 //     alignItems: 'center',
@@ -604,44 +592,47 @@
 //     padding: 5,
 //     borderRadius: 15,
 //   },
-//   heading: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     color: '#39434F',
-//     marginLeft: '25%',
-//   },
-//   locationinput: {
-//     width: '100%',
-//     borderRadius: 24,
+//   inputGroup: {
 //     marginBottom: 20,
+//   },
+//   label: {
 //     fontSize: 16,
-//     backgroundColor: '#fff',
-//     borderBottomColor:'#8337B2',
-//     borderBottomWidth:5
+//     fontWeight: '600',
+//     marginBottom: 8,
+//     color: '#555',
 //   },
 //   input: {
-//     height: 45,
-//     width: '100%',
+//     backgroundColor: '#fff',
+//     borderWidth: 1,
+//     borderColor: '#ddd',
+//     borderRadius: 8,
+//     padding: 12,
+//     fontSize: 16,
 //   },
-//   button: {
+//   dropdown: {
+//     backgroundColor: '#fff',
+//     borderColor: '#ddd',
+//     borderRadius: 8,
+//   },
+//   dropdownContainer: {
+//     backgroundColor: '#fff',
+//     borderColor: '#ddd',
+//     marginTop: 2,
+//   },
+//   submitButton: {
 //     backgroundColor: '#8337B2',
-//     width: '100%',
-//     alignItems: 'center',
-//     borderRadius: 20,
-//     marginTop: 20,
-//     marginBottom: 50,
+//     borderRadius: 8,
 //     overflow: 'hidden',
+//     marginTop: 20,
 //   },
 //   gradient: {
-//     width: '100%',
+//     padding: 16,
 //     alignItems: 'center',
-//     paddingVertical: 15,
-//     borderRadius: 20,
 //   },
 //   buttonText: {
 //     color: '#fff',
-//     fontSize: 16,
 //     fontWeight: 'bold',
+//     fontSize: 16,
 //   },
 //   modalContainer: {
 //     flex: 1,
@@ -674,32 +665,9 @@
 //     color: '#fff',
 //     fontSize: 16,
 //   },
-//   sectionTitle: {
-//     fontSize: 18,
-//     fontWeight: '500',
-//     color: 'grey',
-//     marginBottom: 4,
-//     marginLeft: 5,
-//     width: '100%',
-//   },
-//   suggestionsContainer: {
-//     width: '100%',
-//     backgroundColor: '#fff',
-//     borderRadius: 10,
-//     marginBottom: 20,
-//     maxHeight: 200,
-//   },
-//   suggestionItem: {
-//     padding: 12,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#eee',
-//   },
 // });
 
 // export default PetParentForm;
-
-
-
 
 import React, {useState, useEffect} from 'react';
 import {
@@ -725,7 +693,7 @@ import axios from 'axios';
 import DropDownPicker from 'react-native-dropdown-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const PetParentForm = () => {
+const PetParentForm = ({route}) => {
   const navigation = useNavigation();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -735,6 +703,8 @@ const PetParentForm = () => {
     city: '',
     latitude: '',
     longitude: '',
+    // profile local path (if user picks a new one)
+    profileLocalPath: '',
   });
 
   // Dropdown states
@@ -748,6 +718,13 @@ const PetParentForm = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // track whether there is a profile picture on server (or uploaded just now)
+  const [profileUploaded, setProfileUploaded] = useState(false);
+
+  console.log('params', route?.params);
+
+  const {screen} = route?.params ?? {};
 
   // Debounce the search input
   useEffect(() => {
@@ -775,7 +752,8 @@ const PetParentForm = () => {
         {timeout: 10000},
       );
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
       if (data.status === 'OK') {
@@ -797,22 +775,84 @@ const PetParentForm = () => {
   const handleCitySelect = async placeId => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry&key=AIzaSyAonK15hotzDslX4ePjIbmizRii-7Ng4QE`,
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry,address_component,address_components,formatted_address&key=AIzaSyAonK15hotzDslX4ePjIbmizRii-7Ng4QE`,
         {timeout: 10000},
       );
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      if (data.status === 'OK') {
-        const {lat, lng} = data.result.geometry.location;
+
+      if (data.status === 'OK' && data.result) {
+        const components = data.result.address_components || [];
+
+        // parse components for locality/city/state (robust approach)
+        let locality = '';
+        let city = '';
+        let state = '';
+
+        components.forEach(comp => {
+          const types = comp.types || [];
+
+          if (
+            !locality &&
+            (types.includes('sublocality') ||
+              types.includes('sublocality_level_1') ||
+              types.includes('neighborhood') ||
+              types.includes('route') ||
+              types.includes('premise') ||
+              types.includes('postal_town'))
+          ) {
+            locality = comp.long_name;
+          }
+
+          if (
+            !city &&
+            (types.includes('locality') ||
+              types.includes('postal_town') ||
+              types.includes('administrative_area_level_2'))
+          ) {
+            city = comp.long_name;
+          }
+
+          if (!state && types.includes('administrative_area_level_1')) {
+            state = comp.long_name;
+          }
+        });
+
+        // Fallbacks
+        if (!locality)
+          locality = components[0]?.long_name || data.result.name || '';
+        if (!city)
+          city =
+            city ||
+            locality ||
+            (data.result.formatted_address || '').split(',')[1]?.trim() ||
+            '';
+        if (!state)
+          state =
+            state ||
+            (data.result.formatted_address || '')
+              .split(',')
+              .slice(-2, -1)[0]
+              ?.trim() ||
+            '';
+
+        const lat = data.result.geometry?.location?.lat ?? '';
+        const lng = data.result.geometry?.location?.lng ?? '';
+
         setFormData(prev => ({
           ...prev,
-          city: data.result.name,
+          city: [locality, city, state].filter(Boolean).join(', '), // keep a composed string in city field for compatibility
           latitude: lat.toString(),
           longitude: lng.toString(),
         }));
-        setSearchText(data.result.name);
+        setSearchText(
+          [locality, city, state].filter(Boolean).join(', ') ||
+            data.result.formatted_address ||
+            data.result.name,
+        );
         setCityOpen(false);
       }
     } catch (error) {
@@ -836,12 +876,12 @@ const PetParentForm = () => {
       const storedData = await getUserDataFromStorage();
       if (!storedData?.id) throw new Error('No user ID found');
 
-      const formData = new FormData();
-      formData.append('user_id', storedData.id);
+      const form = new FormData();
+      form.append('user_id', storedData.id);
 
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/auth/my-detail',
-        formData,
+        form,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
 
@@ -859,6 +899,8 @@ const PetParentForm = () => {
 
       if (userDetails) {
         setUserData(userDetails);
+        setProfileUploaded(Boolean(userDetails.profile)); // <--- important: track if server has a profile image
+
         setFormData({
           firstName: userDetails.first_name || '',
           lastName: userDetails.last_name || '',
@@ -867,6 +909,7 @@ const PetParentForm = () => {
           city: userDetails.city || '',
           latitude: userDetails.latitude || '',
           longitude: userDetails.longitude || '',
+          profileLocalPath: '', // reset local selection
         });
 
         if (userDetails.city) {
@@ -912,9 +955,17 @@ const PetParentForm = () => {
         height: 400,
         cropping: true,
       });
-      await updateProfilePic(userData?.id, image.path);
+
+      // store local path while uploading
+      setFormData(prev => ({...prev, profileLocalPath: image.path}));
+
+      // upload immediately (existing behaviour) and mark uploaded on success
+      const res = await updateProfilePic(userData?.id, image.path);
+      if (res) {
+        setProfileUploaded(true);
+        await loadUserData(); // refresh latest server data
+      }
       setModalVisible(false);
-      await loadUserData();
     } catch (error) {
       if (error.code !== 'E_PICKER_CANCELLED') {
         console.log('Camera error:', error);
@@ -934,9 +985,17 @@ const PetParentForm = () => {
         height: 400,
         cropping: true,
       });
-      await updateProfilePic(userData?.id, image.path);
+
+      // store local path while uploading
+      setFormData(prev => ({...prev, profileLocalPath: image.path}));
+
+      // upload immediately and mark uploaded on success
+      const res = await updateProfilePic(userData?.id, image.path);
+      if (res) {
+        setProfileUploaded(true);
+        await loadUserData();
+      }
       setModalVisible(false);
-      await loadUserData();
     } catch (error) {
       if (error.code !== 'E_PICKER_CANCELLED') {
         console.log('Gallery error:', error);
@@ -947,12 +1006,12 @@ const PetParentForm = () => {
   };
 
   const updateProfilePic = async (userId, imageUri) => {
-    if (!imageUri || !userId) return;
+    if (!imageUri || !userId) return null;
 
     try {
-      const formData = new FormData();
-      formData.append('user_id', userId);
-      formData.append('profile', {
+      const form = new FormData();
+      form.append('user_id', userId);
+      form.append('profile', {
         uri: imageUri,
         type: 'image/jpeg',
         name: 'profile.jpg',
@@ -960,7 +1019,7 @@ const PetParentForm = () => {
 
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/auth/update-profile-picture',
-        formData,
+        form,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
 
@@ -978,16 +1037,18 @@ const PetParentForm = () => {
     try {
       if (!userData?.id) throw new Error('No user ID found');
 
-      const formData = new FormData();
-      formData.append('user_id', userData.id);
+      const form = new FormData();
+      form.append('user_id', userData.id);
 
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/auth/delete-profile-picture',
-        formData,
+        form,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
 
       setModalVisible(false);
+      // mark as not uploaded and reload user data
+      setProfileUploaded(false);
       await loadUserData();
       return response.data;
     } catch (error) {
@@ -1016,8 +1077,13 @@ const PetParentForm = () => {
       Alert.alert('Error', 'Phone number is required');
       return false;
     }
+    // make profile picture mandatory
+    if (!profileUploaded) {
+      Alert.alert('Error', 'Please upload a profile picture (required)');
+      return false;
+    }
     if (!formData.city) {
-      Alert.alert('Error', 'Please select a city');
+      Alert.alert('Error', 'Please select a city/locality');
       return false;
     }
     return true;
@@ -1045,6 +1111,16 @@ const PetParentForm = () => {
       data.append('latitude', formData.latitude);
       data.append('longitude', formData.longitude);
 
+      // If user selected a new local image and for some reason it wasn't uploaded,
+      // try attaching it now (most flows already upload on selection)
+      if (formData.profileLocalPath) {
+        data.append('profile', {
+          uri: formData.profileLocalPath,
+          type: 'image/jpeg',
+          name: 'profile.jpg',
+        });
+      }
+
       const response = await axios.post(
         'https://argosmob.com/being-petz/public/api/v1/auth/update-profile',
         data,
@@ -1059,7 +1135,11 @@ const PetParentForm = () => {
 
       if (response.data.status) {
         Alert.alert('Success', 'Profile updated successfully');
-        navigation.goBack();
+        if (screen === 'otp') {
+          navigation.navigate('Add Pet', {screen: 'PetParentForm'}); // make sure name matches your navigator
+        } else {
+          navigation.goBack();
+        }
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
@@ -1102,6 +1182,8 @@ const PetParentForm = () => {
             source={{
               uri: userData?.profile
                 ? `https://argosmob.com/being-petz/public/${userData.profile}`
+                : formData.profileLocalPath
+                ? formData.profileLocalPath
                 : 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/No_image_available_500_x_500.svg/750px-No_image_available_500_x_500.svg.png?20150903190949',
             }}
             style={styles.profileImage}
@@ -1112,6 +1194,13 @@ const PetParentForm = () => {
             <Icon name="camera" size={24} color="#39434F" />
           </TouchableOpacity>
         </View>
+        {/* Profile picture is now mandatory */}
+        <Text style={styles.mandatoryHint}>Profile picture (required)</Text>
+        {!profileUploaded && (
+          <Text style={styles.hintRed}>
+            You must upload a profile picture before proceeding.
+          </Text>
+        )}
       </View>
 
       <View style={styles.inputGroup}>
@@ -1119,9 +1208,7 @@ const PetParentForm = () => {
         <TextInput
           style={styles.input}
           value={formData.firstName}
-          onChangeText={text =>
-            setFormData({...formData, firstName: text})
-          }
+          onChangeText={text => setFormData({...formData, firstName: text})}
           placeholder="First Name"
         />
       </View>
@@ -1131,9 +1218,7 @@ const PetParentForm = () => {
         <TextInput
           style={styles.input}
           value={formData.lastName}
-          onChangeText={text =>
-            setFormData({...formData, lastName: text})
-          }
+          onChangeText={text => setFormData({...formData, lastName: text})}
           placeholder="Last Name"
         />
       </View>
@@ -1143,9 +1228,7 @@ const PetParentForm = () => {
         <TextInput
           style={styles.input}
           value={formData.email}
-          onChangeText={text =>
-            setFormData({...formData, email: text})
-          }
+          onChangeText={text => setFormData({...formData, email: text})}
           placeholder="Email"
           keyboardType="email-address"
         />
@@ -1156,11 +1239,10 @@ const PetParentForm = () => {
         <TextInput
           style={styles.input}
           value={formData.phone}
-          onChangeText={text =>
-            setFormData({...formData, phone: text})
-          }
+          onChangeText={text => setFormData({...formData, phone: text})}
           placeholder="Phone Number (include country code)"
           keyboardType="phone-pad"
+          maxLength={15}
         />
       </View>
 
@@ -1262,13 +1344,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileOuterContainer: {
-    marginVertical: 30,
-    alignItems: 'center',
-    borderWidth: 1,
-    padding: 15,
-    borderRadius: 80,
-    borderColor: '#8337B2',
-    alignSelf: 'center',
+    // marginVertical: 30,
+    // alignItems: 'center',
+    // borderWidth: 1,
+    // padding: 15,
+    // borderRadius: 80,
+    // borderColor: '#8337B2',
+    // alignSelf: 'center',
+    alignItems:'center'
   },
   profileContainer: {
     alignItems: 'center',
@@ -1276,6 +1359,9 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 65,
     borderColor: '#8337B2',
+    justifyContent:'center',
+    height:130,
+    width:130
   },
   profileImage: {
     width: 100,
@@ -1290,6 +1376,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 5,
     borderRadius: 15,
+  },
+  mandatoryHint: {
+    marginTop: 8,
+    color: '#333',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  hintRed: {
+    marginTop: 6,
+    color: '#c00',
+    fontSize: 12,
   },
   inputGroup: {
     marginBottom: 20,

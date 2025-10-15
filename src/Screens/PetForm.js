@@ -29,7 +29,7 @@ const PetForm = () => {
   const [showPetTypeMenu, setShowPetTypeMenu] = useState(false);
   const [breed, setBreed] = useState('');
   const [showGenderMenu, setShowGenderMenu] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
+  const [dateOfBirth, setDateOfBirth] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [aboutPet, setAboutPet] = useState('');
   const [gender, setGender] = useState('');

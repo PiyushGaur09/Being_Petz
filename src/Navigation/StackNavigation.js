@@ -43,12 +43,28 @@ import Favorite from '../Screens/Favorite';
 import PetAdoptionDetails from '../Screens/PetAdoptionDetails';
 import AddModerator from '../Screens/Components/AddModerator';
 import QRCodeGenerator from '../Screens/QRCodeGenerator';
+import AllCommunitiesScreen from '../Screens/AllCommunity';
 
 const Stack = createNativeStackNavigator();
 
+const linking = {
+  prefixes: ['beingpetz://', 'https://beingpetz.app'], // deep link prefixes
+  config: {
+    screens: {
+      AllCommunitiesScreen: {
+        path: 'community/:id',
+        parse: {
+          id: id => `${id}`,
+        },
+      },
+      // add more screens if needed
+    },
+  },
+};
+
 function StackNavigation() {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator>
         <Stack.Screen
           name="Splash"
@@ -240,6 +256,11 @@ function StackNavigation() {
         <Stack.Screen
           name="QR"
           component={QRCodeGenerator}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="AllCommunitiesScreen"
+          component={AllCommunitiesScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

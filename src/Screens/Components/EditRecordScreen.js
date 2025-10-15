@@ -84,6 +84,15 @@ const EditRecordScreen = () => {
       ],
       title: 'Edit Weight Record'
     },
+    general: {
+      endpoint: '/general/update-records',
+      fields: [
+        { name: 'date', type: 'date', label: 'Date', required: true },
+        { name: 'time', type: 'time', label: 'Time', required: true },
+        { name: 'notes', type: 'text', label: 'Notes', required: true, multiline: true },
+      ],
+      title: 'Edit General Record'
+    },
   };
 
   const config = recordConfigs[recordType];
@@ -203,11 +212,13 @@ const EditRecordScreen = () => {
       case 'number':
         return (
           <TextInput
-            style={styles.input}
+            style={[styles.input, field.multiline && styles.multilineInput]}
             value={formData[field.name] || ''}
             onChangeText={(text) => handleInputChange(field.name, text)}
             placeholder={`Enter ${field.label}`}
             keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+            multiline={field.multiline}
+            numberOfLines={field.multiline ? 4 : 1}
           />
         );
       case 'select':
@@ -359,6 +370,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  multilineInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
   selectContainer: {
     borderWidth: 1,

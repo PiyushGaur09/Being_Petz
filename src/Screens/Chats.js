@@ -40,6 +40,9 @@ const Chats = () => {
   const [userLoading, setUserLoading] = useState(true);
   const [pinnedChatIds, setPinnedChatIds] = useState([]);
 
+  console.log('myCommunities', myCommunities);
+  console.log('allCommunities', allCommunities);
+
   const loadPinnedChats = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('@pinned_chats');
@@ -79,9 +82,11 @@ const Chats = () => {
   }, []);
 
   const sortedCommunities = [
-    ...filteredCommunities.filter(chat => pinnedChatIds.includes(chat.id)),
-    ...filteredCommunities.filter(chat => !pinnedChatIds.includes(chat.id)),
+    ...myCommunities.filter(chat => pinnedChatIds.includes(chat.id)),
+    ...myCommunities.filter(chat => !pinnedChatIds.includes(chat.id)),
   ];
+
+  console.log('Sorted', sortedCommunities);
 
   const fetchUserData = async () => {
     try {
@@ -183,6 +188,9 @@ const Chats = () => {
         Alert.alert('Success', response.data.message || 'Joined successfully!');
         // Refresh communities after joining
         fetchCommunities(userData.id);
+        // Clear search results after joining
+        setSearchQuery('');
+        setSeachedCommunities([]);
       } else {
         Alert.alert(
           'Failed',
@@ -203,7 +211,7 @@ const Chats = () => {
     }
   };
 
-  const renderItem = ({item, index}) => (
+  const renderSearchItem = ({item, index}) => (
     <View style={[styles.chatCard, index === 0 && styles.highlightedChat]}>
       <Image
         source={
@@ -234,6 +242,39 @@ const Chats = () => {
     </View>
   );
 
+  const renderJoinedItem = ({item, index}) => {
+    console.log('item', item);
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate('IndividualChat', {community: item})}
+        style={[styles.chatCard, index === 0 && styles.highlightedChat]}>
+        <Image
+          source={item.avatar}
+          style={styles.chatAvatar}
+          defaultSource={require('../Assests/Images/dog.png')}
+        />
+        <View style={styles.chatInfo}>
+          <Text style={styles.chatName}>{item.name}</Text>
+          <Text style={styles.chatMsg}>{item.message}</Text>
+          <Text style={styles.creatorText}>
+            Created by: {item.creator?.first_name} {item.creator?.last_name}
+          </Text>
+        </View>
+        <View style={styles.chatMeta}>
+          <Text style={styles.chatTime}>{item.time}</Text>
+
+          <TouchableOpacity
+            onPress={() => togglePinChat(item.id)}
+            style={{marginTop: 10}}>
+            <Text style={{color: '#8337B2', fontWeight: 'bold'}}>
+              {pinnedChatIds.includes(item.id) ? '📌' : 'Pin'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const transformCommunity = community => ({
     id: community.id,
     name: community.name || 'Community',
@@ -255,22 +296,25 @@ const Chats = () => {
   const fetchCommunities = useCallback(async userId => {
     try {
       setLoading(true);
-
       const allResponse = await axios.get(ALL_COMMUNITIES_API);
       const myResponse = await axios.post(MY_COMMUNITIES_API, {
         parent_id: userId,
       });
 
+      console.log('allResponse', allResponse);
+      console.log('myResponse', myResponse);
+
       if (allResponse.data?.status && myResponse.data?.status) {
         const allTransformedData =
           allResponse.data.data.map(transformCommunity);
-        const myTransformedData = myResponse.data.data.data.map(item =>
+        const myTransformedData = myResponse?.data?.data?.data.map(item =>
           transformCommunity(item.community),
         );
 
+        console.log('myResponse?.data?.data?', myResponse?.data?.data?.data);
+
         setAllCommunities(allTransformedData);
         setMyCommunities(myTransformedData);
-        setFilteredCommunities(myTransformedData);
       } else {
         throw new Error('Failed to load communities');
       }
@@ -312,21 +356,6 @@ const Chats = () => {
       fetchCommunities(user.id);
     }
   }, [fetchCommunities]);
-
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredCommunities(myCommunities);
-      return;
-    }
-
-    const filtered = allCommunities.filter(
-      community =>
-        community.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        myCommunities.some(myCommunity => myCommunity.id === community.id),
-    );
-
-    setFilteredCommunities(filtered);
-  }, [searchQuery, myCommunities, allCommunities]);
 
   if (userLoading || loading) {
     return (
@@ -372,6 +401,7 @@ const Chats = () => {
           width: '100%',
           padding: 16,
           alignItems: 'center',
+          justifyContent: 'space-around',
           gap: 5,
         }}>
         <View style={styles.searchContainer}>
@@ -395,12 +425,31 @@ const Chats = () => {
           )}
         </View>
         <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('AllCommunitiesScreen');
+          }}
+          style={{
+            backgroundColor: '#8337B2',
+            paddingVertical: 5,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+          }}>
+          <Text
+            style={{
+              textAlign: 'center',
+              lineHeight: 16,
+              fontSize: 12,
+              color: '#fff',
+              fontWeight: '500',
+            }}>
+            See All{'\n'}Community
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => navigation.navigate('CreateCommunity')}
           style={[
-            // styles.searchContainer,
             {
               backgroundColor: '#8337B2',
-              // width: '30%',
               height: 40,
               width: 40,
               borderRadius: 20,
@@ -409,101 +458,45 @@ const Chats = () => {
             },
           ]}>
           <Icon name={'add'} color={'#fff'} size={24} />
-          {/* <Text style={{color: '#fff', textAlign: 'center'}}>Create Community</Text> */}
         </TouchableOpacity>
       </View>
 
-      {seachedcommunities.length > 0 && (
+      {searchQuery.length > 0 ? (
+        // Show search results when searching
         <FlatList
           data={seachedcommunities}
           keyExtractor={(item, index) =>
             item.id?.toString() || index.toString()
           }
-          renderItem={renderItem}
+          renderItem={renderSearchItem}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {searchQuery.length > 0
+                  ? 'No communities found'
+                  : 'No joined communities found'}
+              </Text>
+            </View>
+          }
+        />
+      ) : (
+        // Show joined communities when not searching
+        <FlatList
+          showsVerticalScrollIndicator={false}
+          data={sortedCommunities}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No joined communities found</Text>
+            </View>
+          }
+          renderItem={renderJoinedItem}
         />
       )}
-
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        data={sortedCommunities}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No joined communities found</Text>
-          </View>
-        }
-        renderItem={({item, index}) => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('IndividualChat', {community: item})
-            }
-            style={[styles.chatCard, index === 0 && styles.highlightedChat]}>
-            <Image
-              source={item.avatar}
-              style={styles.chatAvatar}
-              defaultSource={require('../Assests/Images/dog.png')}
-            />
-            <View style={styles.chatInfo}>
-              <Text style={styles.chatName}>{item.name}</Text>
-              <Text style={styles.chatMsg}>{item.message}</Text>
-              <Text style={styles.creatorText}>
-                Created by: {item.creator?.first_name} {item.creator?.last_name}
-              </Text>
-            </View>
-            <View style={styles.chatMeta}>
-              <Text style={styles.chatTime}>{item.time}</Text>
-
-              <TouchableOpacity
-                onPress={() => togglePinChat(item.id)}
-                style={{marginTop: 10}}>
-                <Text style={{color: '#8337B2', fontWeight: 'bold'}}>
-                  {pinnedChatIds.includes(item.id) ? '📌' : 'Pin'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* <FlatList
-        showsVerticalScrollIndicator={false}
-        data={filteredCommunities}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No joined communities found</Text>
-          </View>
-        }
-        renderItem={({item, index}) => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('IndividualChat', {community: item})
-            }
-            style={[styles.chatCard, index === 0 && styles.highlightedChat]}>
-            <Image
-              source={item.avatar}
-              style={styles.chatAvatar}
-              defaultSource={require('../Assests/Images/dog.png')}
-            />
-            <View style={styles.chatInfo}>
-              <Text style={styles.chatName}>{item.name}</Text>
-              <Text style={styles.chatMsg}>{item.message}</Text>
-              <Text style={styles.creatorText}>
-                Created by: {item.creator?.first_name} {item.creator?.last_name}
-              </Text>
-            </View>
-            <View style={styles.chatMeta}>
-              <Text style={styles.chatTime}>{item.time}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      /> */}
 
       <FriendRequestsModal
         visible={modalVisible}
@@ -519,7 +512,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
   },
   searchContainer: {
-    width: '85%',
+    width: '55%',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -572,7 +565,6 @@ const styles = StyleSheet.create({
   chatInfo: {
     flex: 1,
     marginRight: 10,
-    // flexDirection: 'row',
     justifyContent: 'space-between',
   },
   chatName: {

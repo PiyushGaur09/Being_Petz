@@ -1,44 +1,26 @@
 {
   "project_info": {
-    "project_number": "479650253156",
-    "project_id": "beingpetz-b029b",
-    "storage_bucket": "beingpetz-b029b.firebasestorage.app"
+    "project_number": "1020580283814",
+    "project_id": "realway-57e11",
+    "storage_bucket": "realway-57e11.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:479650253156:android:503bbbc026db1d240a9271",
+        "mobilesdk_app_id": "1:1020580283814:android:12246daeb2acafd182fb67",
         "android_client_info": {
           "package_name": "com.being_petz"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "479650253156-i9u2ngaec6177pqehgkpki67k64n1anh.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.being_petz",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "479650253156-kcvfuq359p0hm6t8mcfirprasvg6hag7.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCSNLPofSq8Gb-ADH663fDrKsap4PDXNH8"
+          "current_key": "AIzaSyCR32Cl3R3KdR1qOKH1smK-nspHsS7QyCI"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "479650253156-kcvfuq359p0hm6t8mcfirprasvg6hag7.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

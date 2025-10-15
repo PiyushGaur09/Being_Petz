@@ -1,16 +1,4 @@
-// import {View, Text} from 'react-native';
-// import React from 'react';
 
-// const ViewDocuments = ({route}) => {
-//   console.log('route', route.params);
-//   return (
-//     <View>
-//       <Text>ViewDocuments</Text>
-//     </View>
-//   );
-// };
-
-// export default ViewDocuments;
 
 import {
   View,

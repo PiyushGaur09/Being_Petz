@@ -37,7 +37,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
   // State for form fields
   const [formData, setFormData] = useState({});
 
-  console.log('petDetails', petDetail, selectedPetId);
+  console.log('Vaccine', vaccines);
 
   // Fetch selected pet ID and pet details when component mounts
   useEffect(() => {
@@ -125,7 +125,12 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
 
   // Dropdown options
   const dropdownOptions = {
-    vaccine_name: vaccines.map(vaccine => `${vaccine.core_vaccine}`),
+    vaccine_name: vaccines.flatMap(vaccine =>
+      [
+        `${vaccine.core_vaccine} - ${vaccine.min_time}weeks - ${vaccine.max_time} weeks`,
+        vaccine.life_style_vaccine,
+      ].filter(Boolean),
+    ),
     deworming_type: [
       'Pyrantel Pamoate',
       'Fenbendazole',
@@ -275,7 +280,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
         },
         {
           name: 'reminder_date',
-          type: 'date',
+          type: 'max_date',
           required: false,
           label: 'Reminder Date',
         },
@@ -540,6 +545,27 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
                 mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+          </View>
+        );
+      case 'max_date':
+        return (
+          <View style={styles.fieldContainer}>
+            <RequiredLabel label={field.label} required={field.required} />
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => showDatepicker(field.name)}>
+              <Text>{formData[field.name] || `Select ${field.label}`}</Text>
+            </TouchableOpacity>
+            {showDatePicker && dateField === field.name && (
+              <DateTimePicker
+                value={currentDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                minimumDate={new Date()}
               />
             )}
           </View>

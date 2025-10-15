@@ -47,16 +47,6 @@ const Signup = () => {
       return;
     }
 
-    // if (!validatePassword(password)) {
-    //   Alert.alert('Error', 'Password must be at least 8 characters long.');
-    //   return;
-    // }
-
-    // if (password !== confirmPassword) {
-    //   Alert.alert('Error', 'Passwords do not match.');
-    //   return;
-    // }
-
     if (!checked) {
       Alert.alert('Error', 'Please accept Terms and Conditions.');
       return;
@@ -68,7 +58,6 @@ const Signup = () => {
     formData.append('email', email);
     formData.append('first_name', firstName);
     formData.append('last_name', lastName);
-    // formData.append('password', password);
 
     try {
       const response = await axios.post(
@@ -83,19 +72,30 @@ const Signup = () => {
         },
       );
 
-      await AsyncStorage.setItem(
-          'user_data',
-          JSON.stringify(response?.data?.data),
-        );
+      if (response?.data?.status === false) {
+        Alert.alert('Error', response.data?.message || 'Registration failed');
+        setIsLoading(false);
+        return;
+      }
 
-      console.log('Registration Success', response.data);
-      navigation.navigate('OTP', {userData: response.data.data});
+      // await AsyncStorage.setItem(
+      //   'user_data',
+      //   JSON.stringify(response?.data?.data),
+      // );
+
+      // console.log('Registration Success', response.data);
+
+      // ✅ Pass screen name along with userData
+      navigation.navigate('OTP', {
+        userData: response.data.data,
+        fromScreen: 'Signup',
+      });
     } catch (error) {
       let errorMessage = 'Something went wrong. Please try again.';
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error?.request) {
-        errorMessage = 'Network error. Please check your connection.';
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
       Alert.alert('Error', errorMessage);
     } finally {
@@ -155,46 +155,6 @@ const Signup = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-
-            {/* <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Password (min 8 characters)"
-                placeholderTextColor="#808B9A"
-                secureTextEntry={!isPasswordVisible}
-              />
-              <TouchableOpacity
-                onPress={() => setPasswordVisible(!isPasswordVisible)}>
-                <Icon
-                  name={isPasswordVisible ? 'eye' : 'eye-off'}
-                  size={20}
-                  color="#aaa"
-                />
-              </TouchableOpacity>
-            </View> */}
-
-            {/* <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm Password"
-                placeholderTextColor="#808B9A"
-                secureTextEntry={!isConfirmPasswordVisible}
-              />
-              <TouchableOpacity
-                onPress={() =>
-                  setConfirmPasswordVisible(!isConfirmPasswordVisible)
-                }>
-                <Icon
-                  name={isConfirmPasswordVisible ? 'eye' : 'eye-off'}
-                  size={20}
-                  color="#aaa"
-                />
-              </TouchableOpacity>
-            </View> */}
 
             <View style={styles.checkboxContainer}>
               <Checkbox
