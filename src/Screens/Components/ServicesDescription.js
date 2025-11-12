@@ -16,32 +16,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 
 const apiMap = {
-  'Pet Training': 'https://argosmob.com/being-petz/public/api/v1/pet/trainers',
-  'Pet Store': 'https://argosmob.com/being-petz/public/api/v1/pet/shops',
-  Grooming: 'https://argosmob.com/being-petz/public/api/v1/pet/groomers',
-  'Pet Shelter': 'https://argosmob.com/being-petz/public/api/v1/pet/shelters',
-  'Pet Walker': 'https://argosmob.com/being-petz/public/api/v1/pet/sitters',
-  Veterinary: 'https://argosmob.com/being-petz/public/api/v1/veterinary/doctors',
-  'Pet Sitter': 'https://argosmob.com/being-petz/public/api/v1/pet/sitters',
-  'Pet Resort': 'https://argosmob.com/being-petz/public/api/v1/pet/resorts',
+  'Pet Training': 'https://beingpetz.com/petz-info/public/api/v1/pet/trainers',
+  'Pet Store': 'https://beingpetz.com/petz-info/public/api/v1/pet/shops',
+  Grooming: 'https://beingpetz.com/petz-info/public/api/v1/pet/groomers',
+  'Pet Shelter': 'https://beingpetz.com/petz-info/public/api/v1/pet/shelters',
+  'Pet Walker': 'https://beingpetz.com/petz-info/public/api/v1/pet/sitters',
+  Veterinary: 'https://beingpetz.com/petz-info/public/api/v1/veterinary/doctors',
+  'Pet Sitter': 'https://beingpetz.com/petz-info/public/api/v1/pet/sitters',
+  'Pet Resort': 'https://beingpetz.com/petz-info/public/api/v1/pet/resorts',
 };
 
 const favoriteApiMap = {
   'Pet Training':
-    'https://argosmob.com/being-petz/public/api/v1/favorite/trainer',
-  'Pet Store': 'https://argosmob.com/being-petz/public/api/v1/favorite/shop',
-  Grooming: 'https://argosmob.com/being-petz/public/api/v1/favorite/groomer',
+    'https://beingpetz.com/petz-info/public/api/v1/favorite/trainer',
+  'Pet Store': 'https://beingpetz.com/petz-info/public/api/v1/favorite/shop',
+  Grooming: 'https://beingpetz.com/petz-info/public/api/v1/favorite/groomer',
   'Pet Shelter':
-    'https://argosmob.com/being-petz/public/api/v1/favorite/shelter',
-  'Pet Walker': 'https://argosmob.com/being-petz/public/api/v1/favorite/sitter',
-  'Pet Sitter': 'https://argosmob.com/being-petz/public/api/v1/favorite/sitter',
+    'https://beingpetz.com/petz-info/public/api/v1/favorite/shelter',
+  'Pet Walker': 'https://beingpetz.com/petz-info/public/api/v1/favorite/sitter',
+  'Pet Sitter': 'https://beingpetz.com/petz-info/public/api/v1/favorite/sitter',
   'Pet Resort':
-    'https://argosmob.com/being-petz/public/api/v1/favorite/resort-owner',
+    'https://beingpetz.com/petz-info/public/api/v1/favorite/resort-owner',
   Veterinary:
-    'https://argosmob.com/being-petz/public/api/v1/favorite/veterinary',
+    'https://beingpetz.com/petz-info/public/api/v1/favorite/veterinary',
 };
 
-const BASE_URL = 'https://argosmob.com/being-petz/public/';
+const BASE_URL = 'https://beingpetz.com/petz-info/public/';
 
 // Reusable Action Button Component
 const ActionButton = ({icon, text, onPress, color}) => (
@@ -1331,6 +1331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: '#fff',
     marginVertical: 10,
+    color:'#333'
   },
 });
 

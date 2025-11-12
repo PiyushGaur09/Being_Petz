@@ -29,7 +29,7 @@ const RecoverPassword = ({navigation}) => {
       formData.append('email_phone', emailPhone);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/forget-password',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/forget-password',
         formData,
         {
           headers: {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 18,
     fontSize: 16,
-    color: '#000',
+    color: '#333',
   },
   button: {
     backgroundColor: '#8337B2',

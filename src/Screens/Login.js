@@ -56,7 +56,7 @@ const Login = () => {
 
       // Send token to your backend
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/google-login',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/google-login',
         {token: idToken},
       );
 
@@ -88,7 +88,7 @@ const Login = () => {
       formData.append('user_id', userId);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/my-detail',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/my-detail',
         formData,
         {
           headers: {
@@ -134,7 +134,7 @@ const Login = () => {
       console.log('res', formData);
 
       const response = await axios.post(
-        'https://www.argosmob.com/being-petz/public/api/v1/auth/login',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/login',
         formData,
         {
           headers: {
@@ -152,7 +152,7 @@ const Login = () => {
         //   JSON.stringify(response.data.user),
         // );
 
-        if (email_phone == 'piyush.706000000@gmail.com') {
+        if (email_phone == 'piyush.70600@gmail.com') {
           navigation.navigate(
             response.data?.user?.pets?.length > 0
               ? 'BottomNavigation'
@@ -384,6 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
+    color: '#333',
   },
   passwordContainer: {
     flexDirection: 'row',

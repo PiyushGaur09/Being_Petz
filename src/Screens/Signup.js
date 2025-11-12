@@ -61,7 +61,7 @@ const Signup = () => {
 
     try {
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/register',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/register',
         formData,
         {
           headers: {
@@ -77,13 +77,6 @@ const Signup = () => {
         setIsLoading(false);
         return;
       }
-
-      // await AsyncStorage.setItem(
-      //   'user_data',
-      //   JSON.stringify(response?.data?.data),
-      // );
-
-      // console.log('Registration Success', response.data);
 
       // ✅ Pass screen name along with userData
       navigation.navigate('OTP', {
@@ -274,7 +267,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
-    color: '#000',
+    color: '#333',
   },
   passwordContainer: {
     flexDirection: 'row',

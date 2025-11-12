@@ -1,7 +1,7 @@
 import axios from 'axios';
 import ImagePicker from 'react-native-image-crop-picker';
 
-const BASE_URL = 'https://argosmob.com/being-petz/public/api/v1';
+const BASE_URL = 'https://beingpetz.com/petz-info/public/api/v1';
 
 export const fetchMessages = async communityId => {
   try {

@@ -17,19 +17,18 @@ import FriendRequestsModal from './Components/FriendRequestsModal';
 import BannerCarousel from './Components/BannerCarousel';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'https://argosmob.com/being-petz/public';
+const BASE_URL = 'https://beingpetz.com/petz-info/public';
 const API_URL = `${BASE_URL}/api/v1/pet/lost-found/all`;
 const DELETE_URL =
-  'https://argosmob.com/being-petz/public/api/v1/pet/lost-found/delete';
+  'https://beingpetz.com/petz-info/public/api/v1/pet/lost-found/delete';
 
 const AdoptPet = ({route}) => {
   const navigation = useNavigation();
-  console.log('route', route.params?.active);
-  const initialTab = route?.params?.active ?? 'lost'; // <-- safe default
+  const initialTab = route?.params?.active ?? 'lost';
 
   const [allPets, setAllPets] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState(initialTab); // 'lost' or 'found'
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
@@ -87,14 +86,49 @@ const AdoptPet = ({route}) => {
     }
   };
 
-  // Filter pets based on active tab
   const filteredPets = allPets.filter(pet => pet.report_type === activeTab);
+
+  const handleShare = async item => {
+    try {
+      const imageUrl = item.images?.[0] ? `${BASE_URL}/${item.images[0]}` : '';
+      const occurredDate = item.occurred_at?.split('T')[0] || 'Unknown';
+      const formattedDate = occurredDate.split('').join('\u200B');
+
+      const message = `
+${item.report_type === 'lost' ? 'Lost' : 'Found'} Pet Alert 🐾
+
+Breed: ${item.breed || 'Unknown Breed'}
+Description: ${item.description || 'No description provided'}
+Location: ${item.location || 'Unknown'}
+Date ${item.report_type === 'lost' ? 'Lost' : 'Found'}: ${formattedDate}
+Age: ${
+        item.pet_dob
+          ? `${Math.floor(
+              (new Date() - new Date(item.pet_dob)) /
+                (1000 * 60 * 60 * 24 * 30.44),
+            )} months`
+          : 'Unknown'
+      }
+
+${imageUrl ? 'Photo: ' + imageUrl : ''}
+
+Please help ${
+        item.report_type === 'lost'
+          ? 'reunite this pet with pet parent'
+          : 'identify this found pet'
+      }!
+      `;
+
+      await Share.share({message});
+    } catch (error) {
+      console.error('Error sharing pet info:', error);
+    }
+  };
 
   const renderItem = ({item}) => {
     const imageUrl = item.images?.[0]
       ? `${BASE_URL}/${item.images[0]}`
       : 'https://via.placeholder.com/150';
-
     const petDOB = item.pet_dob ? new Date(item.pet_dob) : null;
     const age =
       petDOB && !isNaN(petDOB)
@@ -103,79 +137,15 @@ const AdoptPet = ({route}) => {
           )} months`
         : 'Unknown age';
 
-    const handleShare = async item => {
-      try {
-        const imageUrl = item.images?.[0]
-          ? `${BASE_URL}/${item.images[0]}`
-          : '';
-        const occurredDate = item.occurred_at?.split('T')[0] || 'Unknown';
-        const formattedDate = occurredDate.split('').join('\u200B');
-
-        const isAdoption = item.post_type === 'adoption';
-        const isLostFound =
-          item.report_type === 'lost' || item.report_type === 'found';
-
-        let message = '';
-
-        if (isAdoption) {
-          message = `
-Adoption Alert 🐾🐾
-Adopt or please share with someone who is looking to adopt a pet!
-
-Breed: ${item.breed || 'Unknown Breed'}
-Description: ${item.description || 'No description provided'}
-Age: ${item.pet_dob ? age : 'Unknown'}
-
-${imageUrl ? 'Photo: ' + imageUrl : ''}
-
-Join Beingpetz to see more pets looking for a forever loving home.
-      `;
-        } else if (isLostFound) {
-          message = `
-${item.report_type === 'lost' ? 'Lost' : 'Found'} Pet Alert 🐾🐾
-
-Breed: ${item.breed || 'Unknown Breed'}
-Description: ${item.description || 'No description provided'}
-Location: ${item.location || 'Unknown'}
-Date ${item.report_type === 'lost' ? 'Lost' : 'Found'}: ${formattedDate}
-Age: ${item.pet_dob ? age : 'Unknown'}
-
-${imageUrl ? 'Photo: ' + imageUrl : ''}
-
-Please help ${
-            item.report_type === 'lost'
-              ? 'reunite this pet with its owner'
-              : 'identify this found pet'
-          }!
-      `;
-        } else {
-          message = `
-Pet Alert 🐾🐾
-
-Breed: ${item.breed || 'Unknown Breed'}
-Description: ${item.description || 'No description provided'}
-
-${imageUrl ? 'Photo: ' + imageUrl : ''}
-
-Join Beingpetz for more pet-related information.
-      `;
-        }
-
-        await Share.share({message});
-      } catch (error) {
-        console.error('Error sharing pet info:', error);
-      }
-    };
-
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => {
-          navigation.navigate('PetDetails', {pet: item});
-        }}>
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('PetDetails', {pet: item})}>
+        {/* Image */}
         <View style={styles.imageWrapper}>
           <Image source={{uri: imageUrl}} style={styles.petImage} />
-          {/* Delete button on top of image */}
+          {/* Delete button */}
           {userId === item.user_id && (
             <TouchableOpacity
               style={styles.deleteIcon}
@@ -197,12 +167,9 @@ Join Beingpetz for more pet-related information.
             </TouchableOpacity>
           )}
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            width: '100%',
-          }}>
+
+        {/* Info & Share */}
+        <View style={styles.infoWrapper}>
           <View>
             <Text style={styles.petName}>{item.breed || 'Unknown Breed'}</Text>
             <Text style={styles.petAge}>{age}</Text>
@@ -211,14 +178,11 @@ Join Beingpetz for more pet-related information.
               {item.occurred_at?.split('T')[0] || 'Unknown date'}
             </Text>
           </View>
-          <View style={styles.iconContainer}>
-            <Icon
-              name="send"
-              size={20}
-              color="#000"
-              onPress={() => handleShare(item)}
-            />
-          </View>
+          <TouchableOpacity
+            onPress={() => handleShare(item)}
+            style={styles.shareIcon}>
+            <Icon name="send" size={20} color="#000" />
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
@@ -231,31 +195,16 @@ Join Beingpetz for more pet-related information.
         onPeoplePress={() => setModalVisible(true)}
       />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginVertical: 10,
-          marginHorizontal: 16,
-        }}>
-        <View>
-          <Text style={{fontSize: 20, fontWeight: '700', color: '#8337B2'}}>
-            {activeTab === 'lost' ? 'Lost pets' : 'Found pets'}
-          </Text>
-        </View>
-
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>
+          {activeTab === 'lost' ? 'Lost pets' : 'Found pets'}
+        </Text>
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate('AddLostAndFound', {
-              onRefresh: fetchLostPets,
-            })
+            navigation.navigate('AddLostAndFound', {onRefresh: fetchLostPets})
           }
-          style={{backgroundColor: '#8337B2', borderRadius: 8}}>
-          <Text
-            style={{paddingVertical: 6, paddingHorizontal: 12, color: '#fff'}}>
-            Report and Reunite
-          </Text>
+          style={styles.reportButton}>
+          <Text style={styles.reportButtonText}>Report and Reunite</Text>
         </TouchableOpacity>
       </View>
 
@@ -291,21 +240,21 @@ Join Beingpetz for more pet-related information.
         </TouchableOpacity>
       </View>
 
-      <View style={{flex: 1}}>
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={filteredPets}
-          keyExtractor={item => item.id.toString()}
-          numColumns={2}
-          ListHeaderComponent={<BannerCarousel />}
-          renderItem={renderItem}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              No {activeTab} pets found. Be the first to report one!
-            </Text>
-          }
-        />
-      </View>
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={filteredPets}
+        keyExtractor={item => item.id.toString()}
+        numColumns={2}
+        ListHeaderComponent={<BannerCarousel />}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            No {activeTab} pets found. Be the first to report one!
+          </Text>
+        }
+        contentContainerStyle={{paddingBottom: 20}}
+      />
+
       <FriendRequestsModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -318,12 +267,38 @@ export default AdoptPet;
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#FFF'},
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 16,
+  },
+  title: {fontSize: 20, fontWeight: '700', color: '#8337B2'},
+  reportButton: {backgroundColor: '#8337B2', borderRadius: 8},
+  reportButtonText: {paddingVertical: 6, paddingHorizontal: 12, color: '#fff'},
+  tabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTabButton: {borderBottomColor: '#8337B2'},
+  tabText: {fontSize: 16, color: '#555'},
+  activeTabText: {color: '#8337B2', fontWeight: 'bold'},
   card: {
     flex: 1,
     margin: 5,
     borderRadius: 15,
     padding: 10,
-    alignItems: 'center',
     backgroundColor: '#fff',
     elevation: 2,
   },
@@ -343,27 +318,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 6,
   },
-  petName: {fontSize: 18, fontWeight: '700', marginTop: 5},
+  infoWrapper: {
+    marginTop: 8,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  petName: {fontSize: 16, fontWeight: '700'},
   petAge: {fontSize: 14, color: '#555'},
   petStatus: {fontSize: 12, color: '#777', marginTop: 2},
-  iconContainer: {justifyContent: 'center', marginTop: 5},
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTabButton: {borderBottomColor: '#8337B2'},
-  tabText: {fontSize: 16, color: '#555'},
-  activeTabText: {color: '#8337B2', fontWeight: 'bold'},
+  shareIcon: {padding: 5},
   emptyText: {
     textAlign: 'center',
     marginTop: 20,

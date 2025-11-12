@@ -13,10 +13,12 @@ import {
   ImageBackground,
   Dimensions,
   ScrollView,
+  AppState,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import BackgroundTimer from 'react-native-background-timer';
 
 const {width} = Dimensions.get('window');
 
@@ -26,137 +28,146 @@ const scaleFont = size => Math.round((size * width) / 375);
 
 const OTP = ({route}) => {
   const navigation = useNavigation();
-  const {userData, fromScreen} = route.params || {}; // fromScreen = "Signup" | "Login"
-  console.log('userData', userData, fromScreen);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(180); // 5 minutes
-  const [isLoading, setIsLoading] = useState(false);
-  const inputRefs = useRef([]);
+  const {userData, fromScreen} = route.params || {};
 
-  // Timer countdown
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [timer, setTimer] = useState(180);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastActiveTime, setLastActiveTime] = useState(Date.now());
+  const inputRefs = useRef([]);
+  const appState = useRef(AppState.currentState);
+
+  // Handle app state changes
   useEffect(() => {
-    if (timer === 0) return;
-    const interval = setInterval(() => {
-      setTimer(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        const timeInBackground = Date.now() - lastActiveTime;
+        const secondsInBackground = Math.floor(timeInBackground / 1000);
+
+        setTimer(prev => {
+          const newTime = prev - secondsInBackground;
+          return newTime > 0 ? newTime : 0;
+        });
+      } else if (nextAppState.match(/inactive|background/)) {
+        setLastActiveTime(Date.now());
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [lastActiveTime]);
+
+  // Background-compatible timer
+  useEffect(() => {
+    let intervalId;
+
+    const startTimer = () => {
+      intervalId = BackgroundTimer.setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            BackgroundTimer.clearInterval(intervalId);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    };
+
+    if (timer > 0) {
+      startTimer();
+    }
+
+    return () => {
+      if (intervalId) {
+        BackgroundTimer.clearInterval(intervalId);
+      }
+    };
   }, [timer]);
 
-  // Resend OTP for Register
-  const resendRegisterOtp = async () => {
-    try {
-      setIsLoading(true);
-      setTimer(180);
-      setOtp(['', '', '', '', '', '']);
+  const completeRegistration = async (userDataFromApi = null) => {
+    const user = userDataFromApi || userData;
 
-      const formData = new FormData();
-      formData.append('email', userData?.email);
-      formData.append('first_name', userData?.first_name);
-      formData.append('last_name', userData?.last_name);
+    await AsyncStorage.setItem('user_data', JSON.stringify(user));
 
-      const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/register',
-        formData,
-        {headers: {'Content-Type': 'multipart/form-data'}},
-      );
-
-      if (response.data?.status) {
-        Alert.alert('OTP Resent', 'A new OTP has been sent to your email.');
-      } else {
-        Alert.alert('Error', response.data?.message || 'Failed to resend OTP.');
-      }
-    } catch (error) {
-      console.error('Register Resend OTP error:', error);
-      Alert.alert(
-        'Error',
-        'Something went wrong while resending register OTP.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Resend OTP for Login
-  const resendLoginOtp = async () => {
-    try {
-      setIsLoading(true);
-      setTimer(180);
-      setOtp(['', '', '', '', '', '']);
-
-      const formData = new FormData();
-      formData.append('email', userData?.email);
-
-      const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/login',
-        formData,
-        {headers: {'Content-Type': 'multipart/form-data'}},
-      );
-
-      if (response.data?.status) {
-        Alert.alert('OTP Resent', 'A new OTP has been sent to your email.');
-      } else {
-        Alert.alert('Error', response.data?.message || 'Failed to resend OTP.');
-      }
-    } catch (error) {
-      console.error('Login Resend OTP error:', error);
-      Alert.alert('Error', 'Something went wrong while resending login OTP.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Wrapper function to decide which one to call
-  const handleResendOTP = () => {
-    if (fromScreen == 'Signup') {
-      resendRegisterOtp();
+    if (user?.pets?.length > 0) {
+      navigation.navigate('BottomNavigation');
     } else {
-      resendLoginOtp();
+      navigation.navigate('Pet Parent Form', {screen: 'otp'});
     }
   };
 
   const verifyRegisterOtp = async enteredOtp => {
-    console.log('entered', enteredOtp);
     try {
-      // ✅ First check if enteredOtp matches the otp passed from userData
-      if (enteredOtp != userData?.otp) {
-        Alert.alert('Error', 'Invalid OTP');
+      setIsLoading(true);
+      const cleanOtp = enteredOtp.trim();
+
+      if (cleanOtp.length !== 6) {
+        Alert.alert('Error', 'OTP must be 6 digits');
         return;
       }
 
-      // ✅ If correct, then make API call
+      // Try both methods - local and API validation
+      if (userData?.otp && cleanOtp === userData.otp.toString()) {
+        await completeRegistration();
+        return;
+      }
+
       const formData = new FormData();
       formData.append('user_id', userData?.id);
+      formData.append('otp', cleanOtp);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/register-verify',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/register-verify',
         formData,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
 
       if (response.data?.status) {
-        const user = response.data?.user;
-        await AsyncStorage.setItem('user_data', JSON.stringify(user));
-        navigation.navigate(
-          user?.pets?.length > 0 ? 'BottomNavigation' : 'Pet Parent Form',
-          {screen: 'otp'},
-        );
+        await completeRegistration(response.data.user);
       } else {
-        Alert.alert('Error', response.data?.message || 'Invalid OTP');
+        if (response.data?.message?.toLowerCase().includes('expired')) {
+          Alert.alert(
+            'OTP Expired',
+            'Your OTP has expired. Please request a new one.',
+            [{text: 'Resend OTP', onPress: handleResendOTP}],
+          );
+        } else {
+          Alert.alert('Error', response.data?.message || 'Invalid OTP');
+        }
       }
     } catch (error) {
-      console.error('Signup OTP Verification error:', error);
-      Alert.alert('Error', 'Something went wrong while verifying signup OTP.');
+      console.error('OTP Verification error:', error);
+
+      if (error.response?.status === 422) {
+        Alert.alert('Invalid OTP', 'Please check the OTP and try again.');
+      } else if (error.response?.status === 410) {
+        Alert.alert(
+          'OTP Expired',
+          'Your OTP has expired. Please request a new one.',
+        );
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const verifyLoginOtp = async enteredOtp => {
     try {
+      setIsLoading(true);
       const formData = new FormData();
       formData.append('email', userData?.email);
       formData.append('otp', enteredOtp);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/login-verify',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/login-verify',
         formData,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
@@ -175,6 +186,8 @@ const OTP = ({route}) => {
     } catch (error) {
       console.error('Login OTP Verification error:', error);
       Alert.alert('Error', 'Something went wrong while verifying login OTP.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -186,13 +199,62 @@ const OTP = ({route}) => {
       return;
     }
 
-    setIsLoading(true);
-    if (fromScreen == 'Signup') {
+    if (fromScreen === 'Signup') {
       await verifyRegisterOtp(enteredOtp);
     } else {
       await verifyLoginOtp(enteredOtp);
     }
-    setIsLoading(false);
+  };
+
+  const handleResendOTP = async () => {
+    if (timer > 0 && timer > 30) {
+      Alert.alert(
+        'Wait Required',
+        `Please wait ${formatTime(timer)} before resending.`,
+      );
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setOtp(['', '', '', '', '', '']);
+      setTimer(180);
+      setLastActiveTime(Date.now());
+
+      let response;
+      if (fromScreen === 'Signup') {
+        const formData = new FormData();
+        formData.append('email', userData?.email);
+        formData.append('first_name', userData?.first_name);
+        formData.append('last_name', userData?.last_name);
+
+        response = await axios.post(
+          'https://beingpetz.com/petz-info/public/api/v1/auth/register',
+          formData,
+          {headers: {'Content-Type': 'multipart/form-data'}},
+        );
+      } else {
+        const formData = new FormData();
+        formData.append('email', userData?.email);
+
+        response = await axios.post(
+          'https://beingpetz.com/petz-info/public/api/v1/auth/login',
+          formData,
+          {headers: {'Content-Type': 'multipart/form-data'}},
+        );
+      }
+
+      if (response.data?.status) {
+        Alert.alert('Success', 'A new OTP has been sent to your email.');
+      } else {
+        Alert.alert('Error', response.data?.message || 'Failed to resend OTP.');
+      }
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChangeText = (text, index) => {
@@ -212,7 +274,6 @@ const OTP = ({route}) => {
     }
   };
 
-  // Format timer to display as minutes:seconds
   const formatTime = seconds => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -245,7 +306,9 @@ const OTP = ({route}) => {
             <View style={styles.otpContainer}>
               <View style={styles.titleContainer}>
                 <Text style={styles.mainTitle}>Validation Code</Text>
-                <Text style={styles.subtitle}>Check your email inbox and</Text>
+                <Text style={styles.subtitle}>
+                  Check your email inbox and Junk folder
+                </Text>
                 <Text style={styles.subtitle}>
                   Enter your validation code here
                 </Text>
@@ -272,11 +335,11 @@ const OTP = ({route}) => {
                 ))}
               </View>
 
-              {/* <View style={styles.timerContainer}>
+              <View style={styles.timerContainer}>
                 <Text style={styles.timerText}>
                   OTP expires in: {formatTime(timer)}
                 </Text>
-              </View> */}
+              </View>
 
               <TouchableOpacity
                 style={[
@@ -297,13 +360,14 @@ const OTP = ({route}) => {
                 <Text style={styles.resendText}>Didn't receive?</Text>
                 <TouchableOpacity
                   onPress={handleResendOTP}
-                  disabled={timer > 0}>
+                  disabled={timer > 30}>
                   <Text
                     style={[
                       styles.resendButton,
-                      timer > 0 && styles.disabledResend,
+                      timer > 30 && styles.disabledResend,
                     ]}>
-                    Resend OTP {timer > 0 ? `(${formatTime(timer)})` : ''}
+                    Resend OTP{' '}
+                    {timer > 0 && timer <= 30 ? `(${formatTime(timer)})` : ''}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -315,6 +379,7 @@ const OTP = ({route}) => {
   );
 };
 
+// Styles remain the same...
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#8337B2'},
   backgroundImage: {...StyleSheet.absoluteFillObject},

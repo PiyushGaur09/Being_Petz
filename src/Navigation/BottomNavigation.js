@@ -11,6 +11,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import AddPets from '../Screens/AddPets';
 import EditPetInfo from '../Screens/EditPetInfo';
 import CreatePost from '../Screens/CreatePost';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 
@@ -31,86 +32,92 @@ const CustomTabButton = ({children, onPress}) => (
 
 const BottomTabNavigator = () => {
   return (
-    <Tab.Navigator
-      screenOptions={({route}) => ({
-        tabBarStyle: {
-          backgroundColor: '#8337B2',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          height: 70,
-          position: 'absolute',
-          borderTopWidth: 0,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          // color: '#aaa',
-        },
-        tabBarBackground: () => (
-          <LinearGradient
-            colors={['#8337B2', '#3B0060']}
-            start={{x: 0, y: 0}} // Starting from the top
-            end={{x: 0, y: 1}}
-            style={StyleSheet.absoluteFill}
-          />
-        ),
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#aaa',
-
-        tabBarIcon: ({focused, color, size}) => {
-          let iconName;
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Pets') {
-            iconName = focused ? 'paw' : 'paw-outline';
-          } else if (route.name === 'Services') {
-            iconName = focused ? 'store' : 'store-outline';
-          } else if (route.name === 'More') {
-            iconName = focused ? 'menu' : 'menu';
-          }
-          return <Icon name={iconName} size={24} color={color} />;
-        },
-      })}>
-      <Tab.Screen
-        name="Home"
-        component={Home}
-        options={{tabBarLabel: 'Home', headerShown: false}}
-      />
-      <Tab.Screen
-        name="Pets"
-        component={Pets}
-        options={{tabBarLabel: 'Pets', headerShown: false}}
-      />
-
-      {/* Center Floating Button */}
-      <Tab.Screen
-        name="Add Pets"
-        component={CreatePost}
-        options={{
-          headerShown: false,
-          tabBarButton: props => (
-            <CustomTabButton {...props}>
-              <Icon name="plus" size={28} color="#2D384C" />
-            </CustomTabButton>
+    // <SafeAreaView style={styles.container} edges={['bottom','top']}>
+      <Tab.Navigator
+        screenOptions={({route}) => ({
+          tabBarStyle: {
+            backgroundColor: '#8337B2',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            height: 75,
+            position: 'absolute',
+            borderTopWidth: 0,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+            // color: '#aaa',
+          },
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={['#8337B2', '#3B0060']}
+              start={{x: 0, y: 0}} // Starting from the top
+              end={{x: 0, y: 1}}
+              style={StyleSheet.absoluteFill}
+            />
           ),
-        }}
-      />
+          tabBarActiveTintColor: '#fff',
+          tabBarInactiveTintColor: '#aaa',
 
-      <Tab.Screen
-        name="Services"
-        component={Services}
-        options={{tabBarLabel: 'Services', headerShown: false}}
-      />
-      <Tab.Screen
-        name="More"
-        component={More}
-        options={{tabBarLabel: 'More', headerShown: false}}
-      />
-    </Tab.Navigator>
+          tabBarIcon: ({focused, color, size}) => {
+            let iconName;
+            if (route.name === 'Home') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Pets') {
+              iconName = focused ? 'paw' : 'paw-outline';
+            } else if (route.name === 'Services') {
+              iconName = focused ? 'store' : 'store-outline';
+            } else if (route.name === 'More') {
+              iconName = focused ? 'menu' : 'menu';
+            }
+            return <Icon name={iconName} size={24} color={color} />;
+          },
+        })}>
+        <Tab.Screen
+          name="Home"
+          component={Home}
+          options={{tabBarLabel: 'Home', headerShown: false}}
+        />
+        <Tab.Screen
+          name="Pets"
+          component={Pets}
+          options={{tabBarLabel: 'Pets', headerShown: false}}
+        />
+
+        {/* Center Floating Button */}
+        <Tab.Screen
+          name="Add Pets"
+          component={CreatePost}
+          options={{
+            headerShown: false,
+            tabBarButton: props => (
+              <CustomTabButton {...props}>
+                <Icon name="plus" size={28} color="#2D384C" />
+              </CustomTabButton>
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Services"
+          component={Services}
+          options={{tabBarLabel: 'Services', headerShown: false}}
+        />
+        <Tab.Screen
+          name="More"
+          component={More}
+          options={{tabBarLabel: 'More', headerShown: false}}
+        />
+      </Tab.Navigator>
+    // </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#8337B2', // Or your app background color
+  },
   customButton: {
     top: -30, // Floating effect
     justifyContent: 'center',

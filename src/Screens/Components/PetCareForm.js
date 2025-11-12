@@ -64,7 +64,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -88,7 +88,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
     try {
       setLoadingVaccines(true);
       const response = await axios.get(
-        'https://argosmob.com/being-petz/public/api/v1/vaccine/get-all',
+        'https://beingpetz.com/petz-info/public/api/v1/vaccine/get-all',
       );
 
       if (response.data && response.data.data) {
@@ -126,10 +126,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
   // Dropdown options
   const dropdownOptions = {
     vaccine_name: vaccines.flatMap(vaccine =>
-      [
-        `${vaccine.core_vaccine} - ${vaccine.min_time}weeks - ${vaccine.max_time} weeks`,
-        vaccine.life_style_vaccine,
-      ].filter(Boolean),
+      [vaccine.core_vaccine, vaccine.life_style_vaccine].filter(Boolean),
     ),
     deworming_type: [
       'Pyrantel Pamoate',
@@ -187,7 +184,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
         },
         {
           name: 'reminder_date',
-          type: 'date',
+          type: 'max_date',
           required: false,
           label: 'Reminder Date',
         },
@@ -218,7 +215,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
         },
         {
           name: 'reminder_date',
-          type: 'date',
+          type: 'max_date',
           required: false,
           label: 'Reminder Date',
         },
@@ -256,7 +253,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
         },
         {
           name: 'reminder_date',
-          type: 'date',
+          type: 'max_date',
           required: false,
           label: 'Reminder Date',
         },
@@ -415,7 +412,7 @@ const PetCareForm = ({petId, recordType, onSuccess, onCancel}) => {
       });
 
       const response = await axios.post(
-        `https://argosmob.com/being-petz/public/api/v1${config.endpoint}`,
+        `https://beingpetz.com/petz-info/public/api/v1${config.endpoint}`,
         data,
         {
           headers: {
@@ -682,6 +679,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    color:'#333'
   },
   dropdownIcon: {
     color: '#555',
@@ -716,6 +714,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     textAlignVertical: 'top',
     backgroundColor: '#fff',
+    color:'#333'
   },
   error: {
     color: 'red',

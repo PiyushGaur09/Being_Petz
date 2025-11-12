@@ -69,7 +69,7 @@ const Header = ({
       formData.append('parent_id', parentId); // Use the stored user ID
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/friends/get-requests',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/friends/get-requests',
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -110,7 +110,7 @@ const Header = ({
       formData.append('user_id', userId);
 
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/pet/get/my',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/get/my',
         {
           method: 'POST',
           headers: {Accept: 'application/json'},
@@ -235,7 +235,7 @@ const Header = ({
           <View style={styles.profileRow}>
             <Image
               source={{
-                uri: `https://argosmob.com/being-petz/public/${currentPet.avatar}`,
+                uri: `https://beingpetz.com/petz-info/public/${currentPet.avatar}`,
               }}
               style={styles.profileImage}
             />

@@ -52,7 +52,7 @@ const ResetPassword = ({route}) => {
       formData.append('password', newPassword);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/auth/change-password',
+        'https://beingpetz.com/petz-info/public/api/v1/auth/change-password',
         formData,
         {
           headers: {
@@ -222,6 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     fontSize: 16,
+    color:'#333'
   },
   submitButton: {
     backgroundColor: '#8337B2', // Change to your app's primary color

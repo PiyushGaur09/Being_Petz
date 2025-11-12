@@ -17,7 +17,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_URL = 'https://argosmob.com/being-petz/public/api/v1';
+const API_URL = 'https://beingpetz.com/petz-info/public/api/v1';
 const API_ENDPOINTS = {
   NOTIFICATION_LIST: `${API_URL}/notification/list`,
   NOTIFICATION_CLEAR: `${API_URL}/notification/clear`,
@@ -142,7 +142,7 @@ const CommonHeader = ({onChatPress, onPeoplePress}) => {
 
   return (
     <LinearGradient colors={['#8337B2', '#3B0060']} style={styles.container}>
-      <StatusBar backgroundColor="#8337B2" barStyle="light-content" />
+      <StatusBar backgroundColor="#8337B2" barStyle='light-content' />
       <View style={styles.topRow}>
         <Image
           source={require('../../Assests/Images/newLogo.png')}
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   topRow: {
-    paddingTop: 14,
+    // paddingTop: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

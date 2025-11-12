@@ -48,7 +48,7 @@ const ViewDocuments = ({route}) => {
           style={styles.imageContainer}>
           <Image
             source={{
-              uri: `https://argosmob.com/being-petz/public/${item.image_path}`,
+              uri: `https://beingpetz.com/petz-info/public/${item.image_path}`,
             }}
             style={styles.documentImage}
             resizeMode="cover"

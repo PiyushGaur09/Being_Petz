@@ -19,7 +19,7 @@ import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
 import messaging from '@react-native-firebase/messaging';
 
-const API_URL = 'https://argosmob.com/being-petz/public/api/v1';
+const API_URL = 'https://beingpetz.com/petz-info/public/api/v1';
 const API_ENDPOINTS = {
   USER_DETAIL: `${API_URL}/auth/my-detail`,
   UPDATE_DEVICE_TOKEN: `${API_URL}/notification/update-device/token`,
@@ -228,7 +228,11 @@ const HomeHeader = ({onChatPress, onPeoplePress}) => {
 
   return (
     <LinearGradient colors={['#8337B2', '#3B0060']} style={styles.container}>
-      <StatusBar backgroundColor="#8337B2" barStyle="light-content" />
+      <StatusBar
+        backgroundColor="#8337B2"
+        barStyle="light-content"
+        // translucent={false} // Set to true if you want content under status bar
+      />
       <View style={styles.topRow}>
         <Image
           source={require('../../Assests/Images/newLogo.png')}
@@ -287,7 +291,7 @@ const HomeHeader = ({onChatPress, onPeoplePress}) => {
 
       <ImageZoomModal
         visible={isImageZoomed}
-        imageUri={`https://argosmob.com/being-petz/public/${userData?.profile}`}
+        imageUri={`https://beingpetz.com/petz-info/public/${userData?.profile}`}
         onClose={() => setImageZoomed(false)}
       />
 
@@ -386,7 +390,7 @@ const ProfileSection = ({userData, onImagePress, onNamePress}) => (
     <TouchableOpacity onPress={onImagePress} activeOpacity={0.8}>
       <Image
         source={{
-          uri: `https://argosmob.com/being-petz/public/${userData.profile}`,
+          uri: `https://beingpetz.com/petz-info/public/${userData.profile}`,
         }}
         style={styles.profileImage}
       />
@@ -424,7 +428,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   topRow: {
-    paddingTop: 14,
+    // paddingTop: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -474,7 +478,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginTop: 10,
   },
-  searchInput: {flex: 1, marginLeft: 8, color: '#000', paddingVertical: 0},
+  searchInput: {flex: 1, marginLeft: 8, color: '#333', paddingVertical: 0},
   searchIcon: {marginLeft: 2},
   modalContainer: {
     flex: 1,

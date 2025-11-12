@@ -20,10 +20,10 @@ import CommonHeader from './Components/CommonHeader';
 import LottieLoader from './Components/LottieLoader';
 
 const ALL_COMMUNITIES_API =
-  'https://argosmob.com/being-petz/public/api/v1/pet/community/get';
+  'https://beingpetz.com/petz-info/public/api/v1/pet/community/get';
 const MY_COMMUNITIES_API =
-  'https://argosmob.com/being-petz/public/api/v1/pet/community/my';
-const BASE_URL = 'https://argosmob.com/being-petz/public/';
+  'https://beingpetz.com/petz-info/public/api/v1/pet/community/my';
+const BASE_URL = 'https://beingpetz.com/petz-info/public/';
 
 const Chats = () => {
   const navigation = useNavigation();
@@ -122,7 +122,7 @@ const Chats = () => {
       formData.append('search', query);
 
       const res = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/search',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/search',
         formData,
         {
           headers: {
@@ -175,7 +175,7 @@ const Chats = () => {
 
     try {
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/join',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/join',
         formData,
         {
           headers: {

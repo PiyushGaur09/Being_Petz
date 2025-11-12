@@ -7,58 +7,90 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [parentId, setParentId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const parentId = '10'; // Replace with dynamic parent_id if needed
+  // Load user data from AsyncStorage on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userDataString = await AsyncStorage.getItem('user_data');
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          const userId = userData.id;
+          setParentId(userId.toString());
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
 
-  console.log(filteredUsers, 'filteredUsers');
+    loadUserData();
+  }, []);
 
   // Debounced API call
   useEffect(() => {
+    if (!parentId) return;
+
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim().length > 0) {
         searchUsers(searchQuery);
       } else {
         setFilteredUsers([]);
+        setIsSearching(false);
       }
-    }, 400); // Debounce time
+    }, 400);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  }, [searchQuery, parentId]);
 
   const searchUsers = async query => {
-    const formData = new FormData();
-    formData.append('parent_id', parentId);
-    formData.append('search', query);
+    if (!parentId) {
+      console.log('Parent ID not available yet');
+      return;
+    }
 
+    setLoading(true);
+    setIsSearching(true);
     try {
+      const formData = new FormData();
+      formData.append('parent_id', parentId);
+      formData.append('search', query);
+
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/pet/friends/search-user',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/friends/search-user',
         {
           method: 'POST',
           body: formData,
         },
       );
+      
       const data = await response.json();
       if (data && data.data) {
-        setFilteredUsers(data.data); // Update according to API response structure
+        setFilteredUsers(data.data);
       } else {
         setFilteredUsers([]);
       }
     } catch (error) {
       console.error('Search API Error:', error);
       setFilteredUsers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const baseUrl = 'https://argosmob.com/being-petz/public/';
+  const baseUrl = 'https://beingpetz.com/petz-info/public/';
 
   const renderUserItem = ({item}) => (
     <TouchableOpacity
@@ -87,11 +119,41 @@ const SearchScreen = () => {
           </Text>
         )}
       </View>
-      {/* <TouchableOpacity style={styles.followButton}>
-        <Text style={styles.followButtonText}>Send Request</Text>
-      </TouchableOpacity> */}
     </TouchableOpacity>
   );
+
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View style={styles.emptyResults}>
+          <ActivityIndicator size="large" color="#8337B2" />
+          <Text style={styles.emptyText}>Searching...</Text>
+        </View>
+      );
+    }
+
+    if (isSearching && filteredUsers.length === 0) {
+      return (
+        <View style={styles.emptyResults}>
+          <Icon name="users" size={50} color="#777" />
+          <Text style={styles.emptyText}>No users found</Text>
+          <Text style={styles.emptySubText}>
+            Try searching with different keywords
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyState}>
+        <Icon name="search" size={50} color="#8337B2" />
+        <Text style={styles.emptyStateText}>Search for users</Text>
+        <Text style={styles.emptyStateSubText}>
+          Find friends by name or email
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -109,42 +171,47 @@ const SearchScreen = () => {
         <Icon name="search" size={20} color="#777" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search"
+          placeholder="Search users..."
           placeholderTextColor="#777"
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoFocus
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Icon name="x" size={20} color="#777" style={styles.clearIcon} />
+          <TouchableOpacity 
+            onPress={() => {
+              setSearchQuery('');
+              setFilteredUsers([]);
+              setIsSearching(false);
+            }}
+            style={styles.clearButton}>
+            <Icon name="x" size={20} color="#777" />
           </TouchableOpacity>
         )}
       </View>
 
-      {searchQuery.length > 0 ? (
+      {searchQuery.length > 0 || isSearching ? (
         <FlatList
           data={filteredUsers}
           renderItem={renderUserItem}
           keyExtractor={(item, index) =>
             item.id?.toString() || index.toString()
           }
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyResults}>
-              <Text style={styles.emptyText}>No results found</Text>
-            </View>
+          contentContainerStyle={
+            filteredUsers.length === 0 ? styles.emptyListContainer : styles.listContainer
           }
+          ListEmptyComponent={renderEmptyState}
+          showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Icon name="search" size={50} color="#8337B2" />
-          <Text style={styles.emptyStateText}>Search for users</Text>
-        </View>
+        renderEmptyState()
       )}
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -167,7 +234,7 @@ const styles = StyleSheet.create({
     color: '#8337B2',
   },
   headerRight: {
-    width: 24, // Same as back button for balance
+    width: 24,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -175,7 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
     paddingHorizontal: 15,
-    height: 40,
+    height: 50,
     margin: 15,
     borderWidth: 1,
     borderColor: '#8337B2',
@@ -183,16 +250,19 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 10,
   },
-  clearIcon: {
-    marginLeft: 10,
-  },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#333',
   },
+  clearButton: {
+    padding: 5,
+  },
   listContainer: {
     paddingHorizontal: 15,
+  },
+  emptyListContainer: {
+    flex: 1,
   },
   userItem: {
     flexDirection: 'row',
@@ -225,17 +295,6 @@ const styles = StyleSheet.create({
     color: '#777',
     marginTop: 2,
   },
-  followButton: {
-    backgroundColor: '#8337B2',
-    paddingHorizontal: 15,
-    paddingVertical: 6,
-    borderRadius: 5,
-  },
-  followButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
   emptyResults: {
     flex: 1,
     justifyContent: 'center',
@@ -245,17 +304,31 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#777',
     fontSize: 16,
+    marginTop: 10,
+  },
+  emptySubText: {
+    color: '#999',
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: 'center',
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
   },
   emptyStateText: {
     color: '#8337B2',
     fontSize: 18,
     marginTop: 15,
     fontWeight: '500',
+  },
+  emptyStateSubText: {
+    color: '#777',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 

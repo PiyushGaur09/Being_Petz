@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  RefreshControl,
+  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import petIdEmitter from './Components/PetIdEmitter';
 import Header from './Components/Header';
@@ -22,7 +24,6 @@ import PetCareForm from './Components/PetCareForm';
 import CommonHeader from './Components/CommonHeader';
 import FriendRequestsModal from './Components/FriendRequestsModal';
 import {LineChart} from 'react-native-chart-kit';
-import {Dimensions} from 'react-native';
 
 const ViewAll = () => {
   const navigation = useNavigation();
@@ -36,11 +37,10 @@ const ViewAll = () => {
     groomings: [],
     weights: [],
     meals: [],
-    generals: [], // Added generals to records state
+    generals: [],
   });
   const [modalVisible, setModalVisible] = useState(false);
   const screenWidth = Dimensions.get('window').width;
-  // console.log('record', records);
 
   const [loading, setLoading] = useState({
     petInfo: true,
@@ -49,10 +49,12 @@ const ViewAll = () => {
     groomings: true,
     weights: true,
     meals: true,
-    generals: true, // Added generals to loading state
+    generals: true,
   });
   const [error, setError] = useState(null);
   const [activeForm, setActiveForm] = useState(null);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleSuccess = async response => {
     console.log('Record saved successfully:', response);
@@ -105,7 +107,6 @@ const ViewAll = () => {
               let endpoint = '';
               let stateProperty = '';
 
-              // Map record types to endpoints and state properties
               switch (recordType) {
                 case 'deworming':
                   endpoint = 'deworming/delete-record';
@@ -139,7 +140,7 @@ const ViewAll = () => {
               formData.append('id', id);
 
               const response = await axios.post(
-                `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
+                `https://beingpetz.com/petz-info/public/api/v1/${endpoint}`,
                 formData,
                 {
                   headers: {
@@ -150,7 +151,6 @@ const ViewAll = () => {
               );
 
               if (response.data.status) {
-                // Update the state using the correct property name
                 setRecords(prev => ({
                   ...prev,
                   [stateProperty]: prev[stateProperty].filter(
@@ -217,7 +217,7 @@ const ViewAll = () => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -245,7 +245,7 @@ const ViewAll = () => {
       formData.append('pet_id', selectedPetId);
 
       const response = await axios.post(
-        `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
+        `https://beingpetz.com/petz-info/public/api/v1/${endpoint}`,
         formData,
         {
           headers: {
@@ -274,7 +274,7 @@ const ViewAll = () => {
     const birthDate = new Date(dob);
     const now = new Date();
     const years = now.getFullYear() - birthDate.getFullYear();
-    let months = now.getMonth() - birthDate.getonth();
+    let months = now.getMonth() - birthDate.getMonth();
     if (months < 0) {
       months += 12;
     }
@@ -297,41 +297,51 @@ const ViewAll = () => {
     }
   };
 
-  useEffect(() => {
-    const initializeData = async () => {
+  // initializeData is centralized so we can call it from focus effect and pull-to-refresh
+  const initializeData = useCallback(async () => {
+    try {
+      setError(null);
       const petId = await getSelectedPetId();
-      if (petId) {
-        fetchPetDetails();
-        fetchRecords('vaccine/all-records', 'vaccinations');
-        fetchRecords('deworming/all-records', 'dewormings');
-        fetchRecords('grooming/all-records', 'groomings');
-        fetchRecords('weight/all-records', 'weights');
-        fetchRecords('meal/all-records', 'meals');
-        fetchRecords('general/all-records', 'generals'); // Fetch general records
-      }
-    };
+      if (!petId) return;
 
-    initializeData();
+      // fetch pet details & all record types in parallel (pet details first isn't strictly required but keeps UI consistent)
+      await fetchPetDetails();
 
-    const changeHandler = async () => {
-      const petId = await getSelectedPetId();
-      if (petId) {
-        fetchPetDetails();
-        fetchRecords('vaccine/all-records', 'vaccinations');
-        fetchRecords('deworming/all-records', 'dewormings');
-        fetchRecords('grooming/all-records', 'groomings');
-        fetchRecords('weight/all-records', 'weights');
-        fetchRecords('meal/all-records', 'meals');
-        fetchRecords('general/all-records', 'generals'); // Fetch general records
-      }
-    };
-
-    petIdEmitter.on('petIdChanged', changeHandler);
-
-    return () => {
-      petIdEmitter.off('petIdChanged', changeHandler);
-    };
+      await Promise.all([
+        fetchRecords('vaccine/all-records', 'vaccinations'),
+        fetchRecords('deworming/all-records', 'dewormings'),
+        fetchRecords('grooming/all-records', 'groomings'),
+        fetchRecords('weight/all-records', 'weights'),
+        fetchRecords('meal/all-records', 'meals'),
+        fetchRecords('general/all-records', 'generals'),
+      ]);
+    } catch (err) {
+      console.warn('initializeData error', err);
+    }
   }, [selectedPetId]);
+
+  // run initializeData every time screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      initializeData();
+
+      // react to petIdEmitter events to reload data if pet changes elsewhere in the app
+      const changeHandler = async () => {
+        await initializeData();
+      };
+      petIdEmitter.on('petIdChanged', changeHandler);
+
+      return () => {
+        petIdEmitter.off('petIdChanged', changeHandler);
+      };
+    }, [initializeData]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await initializeData();
+    setRefreshing(false);
+  }, [initializeData]);
 
   const isLoading = Object.values(loading).some(val => val);
 
@@ -343,6 +353,24 @@ const ViewAll = () => {
     'Weight',
     'General',
   ];
+
+  const formatSimpleDateTwoLine = isoDate => {
+    const d = new Date(isoDate);
+    const day = String(d.getDate()).padStart(2, '0');
+    const monthShort = d.toLocaleString('en-GB', {month: 'short'});
+    return `${day}\n${monthShort}`;
+  };
+
+  const sortedWeights = [...records.weights].sort(
+    (a, b) => new Date(a.date) - new Date(b.date),
+  );
+  const maxLabels = 6;
+  const len = sortedWeights.length;
+  const step = Math.max(1, Math.ceil(len / maxLabels));
+  const labels = sortedWeights.map((w, i) =>
+    i % step === 0 ? formatSimpleDateTwoLine(w.date) : '',
+  );
+  const dataValues = sortedWeights.map(w => parseFloat(w.weight));
 
   const renderCategoryView = () => {
     if (isLoading) {
@@ -361,14 +389,7 @@ const ViewAll = () => {
             style={styles.retryButton}
             onPress={() => {
               setError(null);
-              fetchPetDetails();
-              Object.keys(records).forEach(type => {
-                if (type === 'generals') {
-                  fetchRecords('general/all-records', type);
-                } else {
-                  fetchRecords(`${type}/all-records`, type);
-                }
-              });
+              initializeData();
             }}>
             <Text style={styles.retryText}>Try Again</Text>
           </TouchableOpacity>
@@ -764,16 +785,8 @@ const ViewAll = () => {
                 <View style={styles.chartContainer}>
                   <LineChart
                     data={{
-                      labels: records.weights
-                        .sort((a, b) => new Date(a.date) - new Date(b.date))
-                        .map(weight => formatSimpleDate(weight.date)),
-                      datasets: [
-                        {
-                          data: records.weights
-                            .sort((a, b) => new Date(a.date) - new Date(b.date))
-                            .map(weight => parseFloat(weight.weight)),
-                        },
-                      ],
+                      labels,
+                      datasets: [{data: dataValues}],
                     }}
                     width={screenWidth - 60}
                     height={220}
@@ -786,20 +799,20 @@ const ViewAll = () => {
                       decimalPlaces: 1,
                       color: (opacity = 1) => `rgba(131, 55, 178, ${opacity})`,
                       labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                      style: {
-                        borderRadius: 16,
-                      },
+                      style: {borderRadius: 16},
                       propsForDots: {
                         r: '6',
                         strokeWidth: '2',
                         stroke: '#8337B2',
                       },
+                      propsForLabels: {
+                        fontSize: '11',
+                      },
                     }}
                     bezier
-                    style={{
-                      marginVertical: 8,
-                      borderRadius: 16,
-                    }}
+                    style={{marginVertical: 8, borderRadius: 16}}
+                    xLabelsOffset={-10}
+                    withInnerLines={true}
                   />
                 </View>
 
@@ -933,6 +946,7 @@ const ViewAll = () => {
             </TouchableOpacity>
           </View>
         );
+
       default:
         return null;
     }
@@ -952,7 +966,15 @@ const ViewAll = () => {
         onChatPress={() => navigation.navigate('Chats')}
         onPeoplePress={() => setModalVisible(true)}
       />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#8337B2']}
+          />
+        }>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Records</Text>
           <ScrollView

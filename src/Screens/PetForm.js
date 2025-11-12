@@ -131,7 +131,7 @@ const PetForm = () => {
       });
 
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/auth/update-profile-picture', // <- adjust URL if needed
+        'https://beingpetz.com/petz-info/public/api/v1/auth/update-profile-picture', // <- adjust URL if needed
         {
           method: 'POST',
           body: formData,
@@ -169,16 +169,15 @@ const PetForm = () => {
     formData.append('user_id', userData?.id);
     formData.append('name', petName);
     formData.append('type', petType);
-    formData.append('breed', );
+    formData.append('breed');
     formData.append('gender', gender);
     formData.append('dob', dateOfBirth);
     formData.append('bio', aboutPet);
     formData.append('avatar', '77.1025');
 
-
     try {
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/pet/update',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/update',
         {
           method: 'POST',
           body: formData,
@@ -253,12 +252,15 @@ const PetForm = () => {
           placeholder="Enter pet name"
           value={petName}
           onChangeText={setPetName}
+          style={{color: '#333'}}
         />
       </View>
       <Text style={styles.label}>Date of Birth</Text>
       <View style={styles.input}>
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text>{dateOfBirth.toLocaleDateString()}</Text>
+          <Text>
+            {dateOfBirth ? dateOfBirth?.toLocaleDateString() : 'Select Date'}
+          </Text>
         </TouchableOpacity>
       </View>
       {showDatePicker && (
@@ -316,6 +318,7 @@ const PetForm = () => {
           onChangeText={setAboutPet}
           multiline
           numberOfLines={4}
+          style={{color: '#333'}}
         />
       </View>
 

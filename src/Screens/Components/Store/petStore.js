@@ -28,7 +28,7 @@ const usePetStore = create((set) => ({
       formData.append('user_id', userId);
 
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/pet/get/my',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/get/my',
         {
           method: 'POST',
           headers: { Accept: 'application/json' },

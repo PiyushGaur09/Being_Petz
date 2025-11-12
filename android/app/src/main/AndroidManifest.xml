@@ -36,18 +36,22 @@
         <category android:name="android.intent.category.LAUNCHER" />
     </intent-filter>
 
-    <!-- Deep link intent filter -->
-    <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
+        <intent-filter android:autoVerify="true">
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />
 
-        <!-- Custom scheme -->
-        <data android:scheme="beingpetz" android:host="community" />
+          <!-- Custom deep link scheme -->
+          <data android:scheme="beingpetz" />
 
-        <!-- Universal link -->
-        <data android:scheme="https" android:host="beingpetz.app" />
-    </intent-filter>
+          <!-- HTTPS app link (for verified beingpetz.com domain) -->
+          <data
+            android:scheme="https"
+            android:host="beingpetz.com"
+            android:pathPrefix="/"
+          />
+        </intent-filter>
+
       </activity>
     </application>
 </manifest>

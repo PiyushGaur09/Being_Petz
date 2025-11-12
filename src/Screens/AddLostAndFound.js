@@ -18,7 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import {useNavigation, useRoute} from '@react-navigation/native';
 
-const BASE_URL = 'https://argosmob.com/being-petz/public/api/v1';
+const BASE_URL = 'https://beingpetz.com/petz-info/public/api/v1';
 
 const breedData = {
   dog: [
@@ -449,6 +449,7 @@ const AddLostAndFound = () => {
 
   const [formData, setFormData] = useState({
     user_id: '',
+    pet_name: '',
     phone: '+91',
     report_type: 'lost',
     pet_type: 'dog',
@@ -470,7 +471,7 @@ const AddLostAndFound = () => {
     address: '', // Added for full address
   });
 
-  console.log('Address', formData?.address);
+  console.log('Address', formData);
 
   // Dropdown states
   const [reportTypeOpen, setReportTypeOpen] = useState(false);
@@ -505,22 +506,22 @@ const AddLostAndFound = () => {
   const [vaccinatedOpen, setVaccinatedOpen] = useState(false);
   const [vaccinatedValue, setVaccinatedValue] = useState(null);
   const [vaccinatedItems, setVaccinatedItems] = useState([
-    {label: 'Yes', value: '0'},
-    {label: 'No', value: '1'},
+    {label: 'Yes', value: '1'},
+    {label: 'No', value: '0'},
   ]);
 
   const [dewormedOpen, setDewormedOpen] = useState(false);
   const [dewormedValue, setDewormedValue] = useState(null);
   const [dewormedItems, setDewormedItems] = useState([
-    {label: 'Yes', value: '0'},
-    {label: 'No', value: '1'},
+    {label: 'Yes', value: '1'},
+    {label: 'No', value: '0'},
   ]);
 
   const [healthyOpen, setHealthyOpen] = useState(false);
   const [healthyValue, setHealthyValue] = useState(null);
   const [healthyItems, setHealthyItems] = useState([
-    {label: 'Yes', value: '0'},
-    {label: 'No', value: '1'},
+    {label: 'Yes', value: '1'},
+    {label: 'No', value: '0'},
   ]);
 
   // Location dropdown states
@@ -812,6 +813,19 @@ const AddLostAndFound = () => {
           zIndexInverse={1000}
         />
       </View>
+
+      {reportTypeValue === 'lost' && (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Pet Name</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.pet_name} // Change from formData.name to formData.pet_name
+            onChangeText={text => handleInputChange('pet_name', text)} // Change to 'pet_name'
+            placeholder="Enter Name"
+            keyboardType="default"
+          />
+        </View>
+      )}
 
       {/* Pet Type Dropdown */}
       <View style={[styles.inputGroup, {zIndex: 6000}]}>
@@ -1125,6 +1139,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    color:'#111'
   },
   readOnlyInput: {
     backgroundColor: '#f5f5f5',
@@ -1134,6 +1149,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderColor: '#ddd',
     borderRadius: 8,
+    color:'#111'
   },
   dropdownContainer: {
     backgroundColor: '#fff',

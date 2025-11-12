@@ -178,7 +178,7 @@ const CreateCommunity = () => {
       console.log('jjj', formData);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/create',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/create',
         data,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -275,6 +275,7 @@ const CreateCommunity = () => {
         <View style={styles.row}>
           <View style={[styles.input, styles.halfInput, {marginRight: 10}]}>
             <TextInput
+              style={{color: '#333'}}
               placeholder="Latitude"
               keyboardType="numeric"
               value={formData.latitude}
@@ -288,6 +289,7 @@ const CreateCommunity = () => {
           </View>
           <View style={[styles.input, styles.halfInput]}>
             <TextInput
+            style={{color:'#333'}}
               placeholder="Longitude"
               keyboardType="numeric"
               value={formData.longitude}
@@ -405,6 +407,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
+    color: '#333',
   },
   descriptionInput: {
     height: 100,

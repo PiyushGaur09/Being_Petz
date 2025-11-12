@@ -399,7 +399,7 @@ const CreatePost = () => {
       });
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/post/create',
+        'https://beingpetz.com/petz-info/public/api/v1/post/create',
         formData,
         {
           headers: {

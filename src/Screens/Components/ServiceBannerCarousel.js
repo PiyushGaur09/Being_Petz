@@ -15,7 +15,7 @@ import HeaderLoader from './HeaderLoader';
 
 const {width} = Dimensions.get('window');
 
-const BannerCarousel = ({
+const ServiceBannerCarousel = ({
   autoPlay = true,
   timer = 3000,
   onPress,
@@ -45,7 +45,7 @@ const BannerCarousel = ({
   const fetchBanners = async () => {
     try {
       const response = await axios.get(
-        'https://beingpetz.com/petz-info/public/api/v1/banner/all',
+        'https://argosmob.uk/being-petz/public/api/v1/banner/all-ads',
       );
       if (response.data.status && response.data.banners) {
         setBanners(response.data.banners);
@@ -100,7 +100,7 @@ const BannerCarousel = ({
   );
 
   const renderItem = ({item}) => {
-    const imageUrl = `https://beingpetz.com/petz-info/public/${item.mobile_image}`;
+    const imageUrl = `${item.mobile_image}`;
 
     return (
       <TouchableOpacity
@@ -236,4 +236,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BannerCarousel;
+export default ServiceBannerCarousel;

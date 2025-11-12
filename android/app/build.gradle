@@ -6,6 +6,9 @@ apply plugin: "com.android.application"
 apply plugin: "com.google.gms.google-services"
 
 
+//keystore password -- beingpetz123
+
+
 // id("com.android.application")
 // id("com.google.gms.google-services")
 
@@ -89,8 +92,8 @@ android {
         applicationId "com.being_petz"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "3.0"
     }
     signingConfigs {
         debug {

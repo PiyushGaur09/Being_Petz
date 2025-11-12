@@ -20,7 +20,7 @@ import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
-const BASE_URL = 'https://argosmob.com/being-petz/public/api/v1';
+const BASE_URL = 'https://beingpetz.com/petz-info/public/api/v1';
 
 const breedData = {
   dog: [
@@ -539,7 +539,7 @@ const EditPetInfo = ({route}) => {
         dob: currentPetDetail.dob ? new Date(currentPetDetail.dob) : null,
         bio: currentPetDetail.bio || '',
         avatar: currentPetDetail.avatar
-          ? `https://argosmob.com/being-petz/public/${currentPetDetail.avatar}`
+          ? `https://beingpetz.com/petz-info/public/${currentPetDetail.avatar}`
           : null,
       });
       setPetTypeValue(currentPetDetail.type || 'dog');
@@ -904,6 +904,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    color:'#333'
   },
   dropdown: {backgroundColor: '#fff', borderColor: '#ddd', borderRadius: 8},
   dropdownContainer: {

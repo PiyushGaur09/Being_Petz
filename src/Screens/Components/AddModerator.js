@@ -26,7 +26,7 @@ const AddModerator = ({route, navigation}) => {
         formData.append('community_id', communityId);
 
         const response = await axios.post(
-          'https://argosmob.com/being-petz/public/api/v1/pet/community/details',
+          'https://beingpetz.com/petz-info/public/api/v1/pet/community/details',
           formData,
           {
             headers: {'Content-Type': 'multipart/form-data'},
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    color:'#333'
   },
   memberItem: {
     flexDirection: 'row',

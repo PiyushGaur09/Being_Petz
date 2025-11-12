@@ -18,6 +18,7 @@ import CommonHeader from './Components/CommonHeader';
 import BannerCarousel from './Components/BannerCarousel';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import ServiceBannerCarousel from './Components/ServiceBannerCarousel';
 
 const Services = () => {
   const navigation = useNavigation();
@@ -53,7 +54,7 @@ const Services = () => {
       formData.append('user_id', userId);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/favorite/services/get',
+        'https://beingpetz.com/petz-info/public/api/v1/favorite/services/get',
         formData,
         {
           headers: {
@@ -83,7 +84,7 @@ const Services = () => {
         onPeoplePress={() => setModalVisible(true)}
       />
 
-      <BannerCarousel />
+      <ServiceBannerCarousel />
 
       <View style={styles.servicesContainer}>
         <View

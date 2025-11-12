@@ -60,7 +60,7 @@ const DailyReminders = ({petId}) => {
       formData.append('pet_id', petId);
 
       const response = await axios.post(
-        `https://argosmob.com/being-petz/public/api/v1/${endpoint}`,
+        `https://beingpetz.com/petz-info/public/api/v1/${endpoint}`,
         formData,
         {
           headers: {

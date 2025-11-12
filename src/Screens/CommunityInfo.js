@@ -37,7 +37,7 @@ const CommunityInfo = ({route, navigation}) => {
         formData.append('community_id', community?.id);
 
         const response = await axios.post(
-          'https://argosmob.com/being-petz/public/api/v1/pet/community/details',
+          'https://beingpetz.com/petz-info/public/api/v1/pet/community/details',
           formData,
           {
             headers: {'Content-Type': 'multipart/form-data'},
@@ -81,7 +81,7 @@ const CommunityInfo = ({route, navigation}) => {
       formData.append('community_id', community?.id);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/details',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/details',
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -143,7 +143,7 @@ const CommunityInfo = ({route, navigation}) => {
       }
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/update-profile',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/update-profile',
         formData,
         {
           headers: {
@@ -231,7 +231,7 @@ const CommunityInfo = ({route, navigation}) => {
                 formData.append('user_id', userId);
 
                 const response = await axios.post(
-                  'https://argosmob.com/being-petz/public/api/v1/pet/community/left-join',
+                  'https://beingpetz.com/petz-info/public/api/v1/pet/community/left-join',
                   formData,
                   {
                     headers: {'Content-Type': 'multipart/form-data'},
@@ -275,71 +275,6 @@ const CommunityInfo = ({route, navigation}) => {
     }
   };
 
-  // const handleExitCommunity = async () => {
-  //   console.log('userId', community?.id);
-  //   Alert.alert(
-  //     'Leave Community',
-  //     'Are you sure you want to leave this community?',
-  //     [
-  //       {
-  //         text: 'Cancel',
-  //         style: 'cancel',
-  //       },
-  //       {
-  //         text: 'Leave',
-  //         onPress: async () => {
-  //           try {
-  //             setExitLoading(true);
-  //             const userDataString = await AsyncStorage.getItem('user_data');
-  //             if (!userDataString) {
-  //               throw new Error('User data not found');
-  //             }
-
-  //             const userData = JSON.parse(userDataString);
-  //             const userId = userData.id;
-
-  //             const formData = new FormData();
-  //             formData.append('community_id', community?.id);
-  //             formData.append('user_id', userId);
-
-  //             const response = await axios.post(
-  //               'https://argosmob.com/being-petz/public/api/v1/pet/community/left-join',
-  //               formData,
-  //               {
-  //                 headers: {'Content-Type': 'multipart/form-data'},
-  //               },
-  //             );
-
-  //             if (response.data.status) {
-  //               Alert.alert(
-  //                 'Success',
-  //                 'You have left the community successfully',
-  //                 [
-  //                   {
-  //                     text: 'OK',
-  //                     onPress: () =>
-  //                       navigation.reset({
-  //                         index: 0,
-  //                         routes: [{name: 'Chats'}],
-  //                       }),
-  //                   },
-  //                 ],
-  //               );
-  //             } else {
-  //               setError(response.data.message || 'Failed to leave community');
-  //             }
-  //           } catch (err) {
-  //             setError(err.message);
-  //           } finally {
-  //             setExitLoading(false);
-  //           }
-  //         },
-  //       },
-  //     ],
-  //     {cancelable: true},
-  //   );
-  // };
-
   const handleAddModerator = async userId => {
     try {
       const formData = new FormData();
@@ -348,7 +283,7 @@ const CommunityInfo = ({route, navigation}) => {
       formData.append('role', 'moderator');
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/community/add-role',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/community/add-role',
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -384,7 +319,7 @@ const CommunityInfo = ({route, navigation}) => {
               formData.append('parent_id', userId);
 
               const response = await axios.post(
-                'https://argosmob.com/being-petz/public/api/v1/pet/community/remove-role',
+                'https://beingpetz.com/petz-info/public/api/v1/pet/community/remove-role',
                 formData,
                 {
                   headers: {'Content-Type': 'multipart/form-data'},
@@ -436,7 +371,7 @@ const CommunityInfo = ({route, navigation}) => {
             {communityData.creator.profile ? (
               <Image
                 source={{
-                  uri: `https://argosmob.com/being-petz/public/${communityData.creator.profile}`,
+                  uri: `https://beingpetz.com/petz-info/public/${communityData.creator.profile}`,
                 }}
                 style={styles.memberAvatar}
               />
@@ -508,7 +443,7 @@ const CommunityInfo = ({route, navigation}) => {
               {moderator.user.avatar ? (
                 <Image
                   source={{
-                    uri: `https://argosmob.com/being-petz/public/${moderator.user.avatar}`,
+                    uri: `https://beingpetz.com/petz-info/public/${moderator.user.avatar}`,
                   }}
                   style={styles.memberAvatar}
                 />
@@ -571,10 +506,10 @@ const CommunityInfo = ({route, navigation}) => {
         {regularMembers.length > 0 ? (
           regularMembers.map(member => (
             <View key={member.id} style={styles.memberCard}>
-              {member?.user?.avatar ? (
+              {member?.user?.profile ? (
                 <Image
                   source={{
-                    uri: `https://argosmob.com/being-petz/public/${member?.user?.avatar}`,
+                    uri: `https://beingpetz.com/petz-info/public/${member?.user?.profile}`,
                   }}
                   style={styles.memberAvatar}
                 />
@@ -584,16 +519,16 @@ const CommunityInfo = ({route, navigation}) => {
                 </View>
               )}
               <View style={styles.memberInfo}>
-                <Text style={styles.memberName}>{member?.user?.name}</Text>
+                <Text style={styles.memberName}>{`${member?.user?.first_name} ${member?.user?.last_name}`}</Text>
                 {member?.role === 'moderator' &&
                   communityData?.type !== 'public' && (
                     <Text style={styles.memberRole}>Moderator</Text>
                   )}
                 <Text style={styles.memberDetails}>
-                  {member?.user?.type} • {member?.user?.breed}
+                  {member?.role}
                 </Text>
               </View>
-              {(currentUserRole === 'admin' ||
+              {/* {(currentUserRole === 'admin' ||
                 currentUserRole === 'super_admin') &&
                 member?.role === 'member' &&
                 communityData?.type === 'public' && (
@@ -606,7 +541,7 @@ const CommunityInfo = ({route, navigation}) => {
                       color="#28a745"
                     />
                   </TouchableOpacity>
-                )}
+                )} */}
             </View>
           ))
         ) : (
@@ -654,7 +589,7 @@ const CommunityInfo = ({route, navigation}) => {
                 source={{
                   uri:
                     imageUri ||
-                    `https://argosmob.com/being-petz/public/${communityData.profile}`,
+                    `https://beingpetz.com/petz-info/public/${communityData.profile}`,
                 }}
                 style={styles.communityAvatar}
               />
@@ -676,7 +611,7 @@ const CommunityInfo = ({route, navigation}) => {
             {communityData.profile ? (
               <Image
                 source={{
-                  uri: `https://argosmob.com/being-petz/public/${communityData.profile}`,
+                  uri: `https://beingpetz.com/petz-info/public/${communityData.profile}`,
                 }}
                 style={styles.communityAvatar}
               />

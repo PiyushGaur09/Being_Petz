@@ -838,6 +838,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+    color:'#333'
   },
   readOnlyInput: {
     backgroundColor: '#f5f5f5',
@@ -847,6 +848,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderColor: '#ddd',
     borderRadius: 8,
+    color:'#333'
   },
   dropdownContainer: {
     backgroundColor: '#fff',

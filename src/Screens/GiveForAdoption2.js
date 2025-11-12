@@ -135,7 +135,7 @@ const GiveForAdoption2 = () => {
 
     try {
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/create-adoption',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/create-adoption',
         formData,
         {
           headers: {

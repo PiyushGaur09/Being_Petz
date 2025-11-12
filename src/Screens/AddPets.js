@@ -586,7 +586,7 @@ const AddPets = ({route}) => {
       }
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/add',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/add',
         formData,
         {
           headers: {
@@ -655,7 +655,7 @@ const AddPets = ({route}) => {
   //     }
 
   //     const response = await axios.post(
-  //       'https://argosmob.com/being-petz/public/api/v1/pet/add',
+  //       'https://beingpetz.com/petz-info/public/api/v1/pet/add',
   //       formData,
   //       {
   //         headers: {
@@ -737,6 +737,7 @@ const AddPets = ({route}) => {
           placeholderTextColor={'#2D384C'}
           value={petName}
           onChangeText={setPetName}
+          style={{color: '#111'}}
         />
       </View>
 
@@ -831,6 +832,7 @@ const AddPets = ({route}) => {
           onChangeText={setAboutPet}
           multiline
           numberOfLines={4}
+          style={{color: '#111'}}
         />
       </View>
 

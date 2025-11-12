@@ -58,7 +58,7 @@ const Pets = () => {
       formData.append('user_id', userId);
 
       const response = await fetch(
-        'https://argosmob.com/being-petz/public/api/v1/pet/get/my',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/get/my',
         {
           method: 'POST',
           headers: {Accept: 'application/json'},
@@ -109,7 +109,7 @@ const Pets = () => {
       formData.append('parent_id', parentId);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/friends/get-requests',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/friends/get-requests',
         formData,
         {
           headers: {'Content-Type': 'multipart/form-data'},
@@ -183,8 +183,8 @@ const Pets = () => {
         <Image
           source={{
             uri: item.avatar
-              ? `https://argosmob.com/being-petz/public/${item.avatar}`
-              : 'https://argosmob.com/being-petz/public/default-avatar.jpg',
+              ? `https://beingpetz.com/petz-info/public/${item.avatar}`
+              : 'https://beingpetz.com/petz-info/public/default-avatar.jpg',
           }}
           style={styles.petListImage}
         />
@@ -244,7 +244,7 @@ const Pets = () => {
       formData.append('pet_id', petIdToUse);
 
       const response = await axios.post(
-        'https://argosmob.com/being-petz/public/api/v1/pet/detail',
+        'https://beingpetz.com/petz-info/public/api/v1/pet/detail',
         formData,
         {
           headers: {
@@ -399,8 +399,8 @@ const Pets = () => {
         <Image
           source={{
             uri: petData?.avatar
-              ? `https://argosmob.com/being-petz/public/${petData.avatar}`
-              : 'https://argosmob.com/being-petz/public/default-avatar.jpg',
+              ? `https://beingpetz.com/petz-info/public/${petData.avatar}`
+              : 'https://beingpetz.com/petz-info/public/default-avatar.jpg',
           }}
           style={styles.avatar}
           onError={e => console.log('Image load error:', e.nativeEvent.error)}

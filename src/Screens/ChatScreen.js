@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  searchInput: {fontSize: 16},
+  searchInput: {fontSize: 16,color:'#333'},
 
   communityContainer: {
     paddingVertical: 10,
