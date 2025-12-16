@@ -113,10 +113,10 @@ const OTP = ({route}) => {
       }
 
       // Try both methods - local and API validation
-      if (userData?.otp && cleanOtp === userData.otp.toString()) {
-        await completeRegistration();
-        return;
-      }
+      // if (userData?.otp && cleanOtp === userData.otp.toString()) {
+      //   await completeRegistration();
+      //   return;
+      // }
 
       const formData = new FormData();
       formData.append('user_id', userData?.id);

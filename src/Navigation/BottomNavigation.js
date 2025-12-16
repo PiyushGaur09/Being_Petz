@@ -50,7 +50,7 @@ const BottomTabNavigator = () => {
           },
           tabBarBackground: () => (
             <LinearGradient
-              colors={['#8337B2', '#3B0060']}
+              colors={['#3B0060', '#8337B2']}
               start={{x: 0, y: 0}} // Starting from the top
               end={{x: 0, y: 1}}
               style={StyleSheet.absoluteFill}

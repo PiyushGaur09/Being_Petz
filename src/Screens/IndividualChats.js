@@ -366,7 +366,7 @@ const IndividualChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#3B0060" barStyle='light-content' />
+      <StatusBar backgroundColor="#8337B2" barStyle='light-content' />
 
       <ChatHeader community={community} onBack={() => navigation.goBack()} />
 

@@ -127,23 +127,21 @@ const Login = () => {
       }
 
       setIsLoading(true);
-      const formData = new FormData();
-      formData.append('email', email_phone);
-      // formData.append('password', password);
-
-      console.log('res', formData);
 
       const response = await axios.post(
         'https://beingpetz.com/petz-info/public/api/v1/auth/login',
-        formData,
+        {
+          email: email_phone,
+        },
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
         },
       );
 
-      console.log('res1mmm1', response);
+      console.log('API RESPONSE:', response.data);
 
       if (response.data?.status) {
         // Store user data in AsyncStorage
